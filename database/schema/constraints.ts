@@ -1,0 +1,3 @@
+/**
+ * Shared database constraint names.
+ */
