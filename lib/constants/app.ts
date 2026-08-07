@@ -1,1 +1,0 @@
-export const APP_NAME = 'DE 8 Ball Pool Cup';

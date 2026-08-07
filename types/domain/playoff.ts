@@ -1,4 +1,4 @@
-import { MatchStage } from './domain/tournament';
+import { MatchStage } from './tournament';
 
 export interface PlayoffMatch {
   matchId: string;

@@ -1,0 +1,48 @@
+import Link from 'next/link';
+
+import { listSeasons } from '@/lib/services';
+import { TournamentState } from '@/types/domain/tournament';
+
+const STATE_LABEL: Record<string, string> = {
+  [TournamentState.COMPLETED]: 'Completed',
+  [TournamentState.ACTIVE]: 'In progress',
+  [TournamentState.DRAFT]: 'Draft',
+  [TournamentState.ARCHIVED]: 'Archived',
+};
+
+export default async function HomePage() {
+  const seasons = await listSeasons();
+
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-12">
+      <p className="text-center font-serif text-lg italic text-muted-foreground">Seasons, standings, and results.</p>
+
+      <ul className="mt-8 flex flex-col gap-3">
+        {seasons.map((season) => (
+          <li key={season.id}>
+            <Link
+              href={`/seasons/${season.seasonNumber}`}
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 shadow-sm transition-colors hover:bg-accent"
+            >
+              <span className="font-serif text-lg font-semibold text-card-foreground">{season.name}</span>
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  {season.tournamentFormat === 'GROUP' ? 'Group + Knockout' : 'League + IPL'}
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide ${
+                    season.state === TournamentState.ACTIVE
+                      ? 'bg-primary/15 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {STATE_LABEL[season.state] ?? season.state}
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}

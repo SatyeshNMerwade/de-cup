@@ -1,3 +1,0 @@
-/**
- * Shared database index names.
- */
