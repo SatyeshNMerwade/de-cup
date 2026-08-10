@@ -2,11 +2,12 @@ import 'server-only';
 
 import { cache } from 'react';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { users } from '@/database/schema';
+import { UserRole } from '@/types/domain/user';
 
 import { decrypt, SESSION_COOKIE_NAME } from './session';
 
@@ -51,6 +52,21 @@ export const requireUser = cache(async () => {
   const user = await getCurrentUser();
   if (!user) {
     redirect('/auth/login');
+  }
+  return user;
+});
+
+/**
+ * Same as requireUser, plus a role check for user-management routes. Renders
+ * as a plain 404 rather than a distinct "forbidden" page — consistent with
+ * this app's existing vague-on-purpose security style (see login()'s
+ * deliberately generic error message), and doesn't confirm to a curious
+ * regular admin that a users page even exists.
+ */
+export const requireSuperAdmin = cache(async () => {
+  const user = await requireUser();
+  if (user.role !== UserRole.SUPER_ADMIN) {
+    notFound();
   }
   return user;
 });

@@ -1,4 +1,4 @@
-import { pgTable, text, uniqueIndex, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, uniqueIndex, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
 
 import { TABLES } from '../constants';
 import { idColumn, timestampColumns } from '../common';
@@ -18,6 +18,10 @@ export const users = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
 
     role: userRoleEnum('role').default('ADMIN').notNull(),
+
+    failedLoginAttempts: integer('failed_login_attempts').default(0).notNull(),
+
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
 
     ...timestampColumns,
   },

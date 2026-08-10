@@ -9,3 +9,4 @@ export * from './qualification.service';
 export * from './statistics.service';
 export * from './rule-sets.service';
 export * from './season-progression.service';
+export * from './users.service';

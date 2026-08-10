@@ -8,6 +8,13 @@
       "when": 1786045793197,
       "tag": "0000_first_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786395850506,
+      "tag": "0001_aspiring_wendell_vaughn",
+      "breakpoints": true
     }
   ]
 }

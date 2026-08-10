@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Admin access
+
+Current login: `satyesh` / `4Z1uQr9Oi37`
+
+There's no self-service "forgot password" flow — this app has no email sending capability, and realistically only has a couple of admin accounts. If an admin forgets their password (or you need to create/update one from the shell), use the seed script directly:
+
+```bash
+npx tsx scripts/seed-db.ts --username <username> --display-name "<Display Name>" --password "<new password>" [--role SUPER_ADMIN|ADMIN]
+```
+
+Re-running it with an existing `--username` updates that account's password/display name/role in place (min 8 characters). A `SUPER_ADMIN` can also reset another admin's password in-app from **Admin → Users**, without needing shell access — this CLI path is only needed to reset your *own* password, or to create the very first account on a fresh database.
+
+Five wrong password attempts in a row locks that account out for 15 minutes.

@@ -24,20 +24,20 @@ function StandingsTable({ title, entries }: { title: string; entries: StandingsE
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs tracking-wide text-muted-foreground uppercase">
-            <th className="px-4 py-2">#</th>
-            <th className="px-4 py-2">Player</th>
-            <th className="px-4 py-2">P</th>
-            <th className="px-4 py-2">W</th>
-            <th className="px-4 py-2">L</th>
-            <th className="px-4 py-2">Win Margin</th>
-            <th className="px-4 py-2">Lose Margin</th>
+            <th className="px-3 py-2">#</th>
+            <th className="px-3 py-2">Player</th>
+            <th className="px-3 py-2">P</th>
+            <th className="px-3 py-2">W</th>
+            <th className="px-3 py-2">L</th>
+            <th className="px-3 py-2">Win Margin</th>
+            <th className="px-3 py-2">Lose Margin</th>
           </tr>
         </thead>
         <tbody>
           {entries.map((e, i) => (
             <tr key={e.playerId} className={`border-t border-border ${i < 4 ? 'bg-accent/30' : ''}`}>
-              <td className="px-4 py-2 font-serif font-bold text-primary">{i + 1}</td>
-              <td className="px-4 py-2 font-medium text-card-foreground">
+              <td className="px-3 py-2 font-serif font-bold text-primary">{i + 1}</td>
+              <td className="px-3 py-2 font-medium text-card-foreground">
                 {e.displayName}
                 {e.needsDecider && e.played > 0 && (
                   <span className="ml-2 rounded-full bg-ring/20 px-2 py-0.5 text-xs font-bold text-ring">
@@ -45,11 +45,11 @@ function StandingsTable({ title, entries }: { title: string; entries: StandingsE
                   </span>
                 )}
               </td>
-              <td className="px-4 py-2">{e.played}</td>
-              <td className="px-4 py-2">{e.wins}</td>
-              <td className="px-4 py-2">{e.losses}</td>
-              <td className="px-4 py-2">{e.winMargin}</td>
-              <td className="px-4 py-2">{e.loseMargin}</td>
+              <td className="px-3 py-2">{e.played}</td>
+              <td className="px-3 py-2">{e.wins}</td>
+              <td className="px-3 py-2">{e.losses}</td>
+              <td className="px-3 py-2">{e.winMargin}</td>
+              <td className="px-3 py-2">{e.loseMargin}</td>
             </tr>
           ))}
         </tbody>
@@ -114,11 +114,15 @@ export default async function SeasonPage({
       )}
 
       <SectionHeading>{isGroupFormat ? 'Group Stage' : 'League Stage'}</SectionHeading>
-      <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-        {isGroupFormat
-          ? groups.map((g, i) => <StandingsTable key={g.id} title={`Group ${g.name}`} entries={groupStandings[i]} />)
-          : leagueStandings && <StandingsTable title="League Table" entries={leagueStandings} />}
-      </div>
+      {isGroupFormat ? (
+        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+          {groups.map((g, i) => (
+            <StandingsTable key={g.id} title={`Group ${g.name}`} entries={groupStandings[i]} />
+          ))}
+        </div>
+      ) : (
+        leagueStandings && <StandingsTable title="League Table" entries={leagueStandings} />
+      )}
 
       {qualificationOutlook && (
         <>

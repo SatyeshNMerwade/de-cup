@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { requireUser } from '@/lib/auth/dal';
 import { logout } from '@/app/auth/actions';
+import { UserRole } from '@/types/domain/user';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -19,6 +20,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/seasons/new" className="text-sm text-muted-foreground hover:text-foreground">
             New Season
           </Link>
+          {user.role === UserRole.SUPER_ADMIN && (
+            <Link href="/admin/users" className="text-sm text-muted-foreground hover:text-foreground">
+              Users
+            </Link>
+          )}
         </div>
         <div className="flex items-center gap-4 text-sm">
           <span className="text-muted-foreground">{user.displayName}</span>

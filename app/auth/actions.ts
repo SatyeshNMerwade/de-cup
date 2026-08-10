@@ -18,6 +18,9 @@ export interface LoginState {
   error?: string;
 }
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
 export async function login(_prevState: LoginState | undefined, formData: FormData): Promise<LoginState> {
   const parsed = LoginSchema.safeParse({
     username: formData.get('username'),
@@ -33,9 +36,28 @@ export async function login(_prevState: LoginState | undefined, formData: FormDa
   const user = await db.query.users.findFirst({ where: eq(users.username, parsed.data.username) });
   if (!user || !user.isActive) return invalidCredentials;
 
-  const valid = await verifyPassword(parsed.data.password, user.passwordHash);
-  if (!valid) return invalidCredentials;
+  // Only reachable after 5 real wrong guesses in a row — no per-attempt
+  // enumeration signal, but worth a distinct message once actually locked
+  // so the legitimate admin isn't left guessing why a correct password fails.
+  if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+    return { error: 'Too many failed attempts — try again in a few minutes.' };
+  }
 
+  const valid = await verifyPassword(parsed.data.password, user.passwordHash);
+  if (!valid) {
+    const attempts = user.failedLoginAttempts + 1;
+    const lockedOut = attempts >= MAX_FAILED_ATTEMPTS;
+    await db
+      .update(users)
+      .set({
+        failedLoginAttempts: lockedOut ? 0 : attempts,
+        lockedUntil: lockedOut ? new Date(Date.now() + LOCKOUT_DURATION_MS) : null,
+      })
+      .where(eq(users.id, user.id));
+    return invalidCredentials;
+  }
+
+  await db.update(users).set({ failedLoginAttempts: 0, lockedUntil: null }).where(eq(users.id, user.id));
   await createSession(user.id, user.role);
   redirect('/admin');
 }
