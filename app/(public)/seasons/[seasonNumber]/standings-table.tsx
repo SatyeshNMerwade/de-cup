@@ -21,6 +21,7 @@ export function StandingsTable({ title, entries }: { title: string; entries: Sta
             <th className="px-3 py-2">P</th>
             <th className="px-3 py-2">W</th>
             <th className="px-3 py-2">L</th>
+            <th className="px-3 py-2">Pts</th>
             <th className="px-3 py-2">Win Margin</th>
             <th className="px-3 py-2">Lose Margin</th>
             <th className="px-3 py-2">Form</th>
@@ -48,6 +49,7 @@ export function StandingsTable({ title, entries }: { title: string; entries: Sta
               <td className="px-3 py-2">{e.played}</td>
               <td className="px-3 py-2 font-semibold text-primary">{e.wins}</td>
               <td className="px-3 py-2 font-semibold text-destructive">{e.losses}</td>
+              <td className="px-3 py-2 font-semibold text-card-foreground">{e.points}</td>
               <td className="px-3 py-2">{e.winMargin}</td>
               <td className="px-3 py-2">{e.loseMargin}</td>
               <td className="px-3 py-2">

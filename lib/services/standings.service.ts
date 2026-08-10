@@ -17,6 +17,8 @@ export interface StandingsEntryView {
   loseMargin: number;
   needsDecider: boolean;
   recentForm: ('W' | 'L')[];
+  /** wins * the season's rule-set pointsPerWin (2 for League + IPL, 1 for Group + Knockout). */
+  points: number;
 }
 
 /**
@@ -57,10 +59,12 @@ export async function getSeasonStandings(
   }));
 
   const tieBreakerOrder = season.ruleSet.rules.tieBreakers.order;
+  const pointsPerWin = season.ruleSet.rules.scoring.pointsPerWin;
   const standings = computeStandings(playerIds, inputs, tieBreakerOrder);
 
   return standings.map((s) => ({
     ...s,
     displayName: nameById.get(s.playerId) ?? s.playerId,
+    points: s.wins * pointsPerWin,
   }));
 }
