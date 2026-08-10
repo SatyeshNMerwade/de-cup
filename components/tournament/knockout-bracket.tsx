@@ -1,16 +1,8 @@
 import type { PlayoffMatch } from '@/lib/services';
 import { MatchStage } from '@/types/domain/tournament';
 
-import {
-  AdvanceTag,
-  BracketCard,
-  ChampionTag,
-  PendingResult,
-  RunnerUpTag,
-  ThirdPlaceTag,
-  matchLoser,
-  matchParticipants,
-} from './bracket-parts';
+import { AdvanceTag, BracketCard, PendingResult, matchLoser, matchParticipants } from './bracket-parts';
+import { ChampionTag, RunnerUpTag, ThirdPlaceTag } from './award-tags';
 
 /** Semifinal x2 -> Third Place + Final, for Group + Knockout seasons. */
 export function KnockoutBracket({ matches }: { matches: PlayoffMatch[] }) {

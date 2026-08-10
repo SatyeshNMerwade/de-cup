@@ -51,6 +51,8 @@ export interface PlayerCareerStats {
   eightBallFoulsWon: number;
   longestWinStreak: number;
   currentStreak: CurrentStreak;
+  /** Last 5 results, oldest first. */
+  recentForm: ('W' | 'L')[];
 }
 
 /** `matches` must already be in chronological order (oldest first). */
@@ -76,6 +78,7 @@ export function computeCareerStats(
       eightBallFoulsWon: 0,
       longestWinStreak: 0,
       currentStreak: { type: null, count: 0 },
+      recentForm: [],
     };
     winMarginSum[id] = 0;
     winMarginCount[id] = 0;
@@ -97,6 +100,9 @@ export function computeCareerStats(
         run.count = 1;
       }
       if (isWin) s.longestWinStreak = Math.max(s.longestWinStreak, run.count);
+
+      s.recentForm.push(isWin ? 'W' : 'L');
+      if (s.recentForm.length > 5) s.recentForm.shift();
     });
 
     const winner = stats[m.winnerId];

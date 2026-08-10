@@ -8,55 +8,13 @@ import {
   listAwardsBySeason,
   getSeasonStandings,
   getQualificationOutlook,
-  type StandingsEntryView,
 } from '@/lib/services';
 import { IplBracket } from '@/components/tournament/ipl-bracket';
 import { KnockoutBracket } from '@/components/tournament/knockout-bracket';
 import { QualificationPanel } from '@/components/tournament/qualification-panel';
 import { PlayoffFormat, TournamentFormat, MatchStage } from '@/types/domain/tournament';
 
-function StandingsTable({ title, entries }: { title: string; entries: StandingsEntryView[] }) {
-  return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
-      <div className="border-b-2 border-primary/20 bg-secondary/40 px-4 py-2 font-serif font-semibold text-card-foreground">
-        {title}
-      </div>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-xs tracking-wide text-muted-foreground uppercase">
-            <th className="px-3 py-2">#</th>
-            <th className="px-3 py-2">Player</th>
-            <th className="px-3 py-2">P</th>
-            <th className="px-3 py-2">W</th>
-            <th className="px-3 py-2">L</th>
-            <th className="px-3 py-2">Win Margin</th>
-            <th className="px-3 py-2">Lose Margin</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((e, i) => (
-            <tr key={e.playerId} className={`border-t border-border ${i < 4 ? 'bg-accent/30' : ''}`}>
-              <td className="px-3 py-2 font-serif font-bold text-primary">{i + 1}</td>
-              <td className="px-3 py-2 font-medium text-card-foreground">
-                {e.displayName}
-                {e.needsDecider && e.played > 0 && (
-                  <span className="ml-2 rounded-full bg-ring/20 px-2 py-0.5 text-xs font-bold text-ring">
-                    Decider needed
-                  </span>
-                )}
-              </td>
-              <td className="px-3 py-2">{e.played}</td>
-              <td className="px-3 py-2">{e.wins}</td>
-              <td className="px-3 py-2">{e.losses}</td>
-              <td className="px-3 py-2">{e.winMargin}</td>
-              <td className="px-3 py-2">{e.loseMargin}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+import { StandingsTable } from './standings-table';
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -115,7 +73,7 @@ export default async function SeasonPage({
 
       <SectionHeading>{isGroupFormat ? 'Group Stage' : 'League Stage'}</SectionHeading>
       {isGroupFormat ? (
-        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+        <div className="flex flex-col gap-6">
           {groups.map((g, i) => (
             <StandingsTable key={g.id} title={`Group ${g.name}`} entries={groupStandings[i]} />
           ))}

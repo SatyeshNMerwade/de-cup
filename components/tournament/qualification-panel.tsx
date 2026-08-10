@@ -1,9 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 
 import type { QualificationOutlookView } from '@/lib/services';
 import { formatTieBreakerLabel } from '@/lib/helpers/format.helper';
+
+/** Green when qualification-leaning, red when elimination-leaning, neutral ink in between — never gold-on-white (fails contrast, see the plan's validate_palette.js findings). */
+function pctColor(midPct: number): string {
+  if (midPct >= 60) return 'text-primary';
+  if (midPct <= 25) return 'text-destructive';
+  return 'text-foreground';
+}
+
+function AnimatedPct({ value }: { value: number }) {
+  const reduceMotion = useReducedMotion();
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (v) => Math.round(v));
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      count.set(value);
+      return;
+    }
+    if (!hasAnimated.current) {
+      hasAnimated.current = true;
+      const controls = animate(count, value, { duration: 0.6 });
+      return controls.stop;
+    }
+    count.set(value);
+  }, [value, reduceMotion, count]);
+
+  return <motion.span>{rounded}</motion.span>;
+}
 
 export function QualificationPanel({ outlook }: { outlook: QualificationOutlookView[] }) {
   const [selectedId, setSelectedId] = useState(outlook[0]?.playerId ?? '');
@@ -31,7 +61,9 @@ export function QualificationPanel({ outlook }: { outlook: QualificationOutlookV
 
       <div className="mt-5">
         <div className="flex items-baseline gap-3">
-          <span className="font-serif text-4xl font-bold text-primary">{selected.midPct}%</span>
+          <span className={`font-serif text-4xl font-bold ${pctColor(selected.midPct)}`}>
+            <AnimatedPct value={selected.midPct} />%
+          </span>
           <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">chance of qualifying</span>
         </div>
         {selected.floorPct !== selected.ceilingPct && (

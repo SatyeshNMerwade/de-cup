@@ -60,6 +60,22 @@ describe('isBoundaryUnresolved', () => {
   });
 });
 
+describe('computeStandings recentForm', () => {
+  it('keeps the last 5 results in match order, oldest first', () => {
+    const matches = [
+      match('A', 'B', 'A'),
+      match('A', 'C', 'A'),
+      match('B', 'A', 'B'),
+      match('A', 'D', 'A'),
+      match('A', 'B', 'A'),
+      match('A', 'C', 'A'),
+    ];
+    const standings = computeStandings(['A', 'B', 'C', 'D'], matches, TIEBREAK_ORDER);
+    const a = standings.find((s) => s.playerId === 'A')!;
+    expect(a.recentForm).toEqual(['W', 'L', 'W', 'W', 'W']);
+  });
+});
+
 describe('describeBoundaryMarginGap', () => {
   it('is null when the boundary is separated by wins, not a tie', () => {
     const matches = [match('A', 'B', 'A'), match('A', 'C', 'A'), match('B', 'C', 'B')];

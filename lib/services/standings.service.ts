@@ -16,6 +16,7 @@ export interface StandingsEntryView {
   winMargin: number;
   loseMargin: number;
   needsDecider: boolean;
+  recentForm: ('W' | 'L')[];
 }
 
 /**

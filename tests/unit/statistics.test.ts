@@ -68,6 +68,20 @@ describe('computeCareerStats', () => {
     expect(stats.A.played).toBe(3);
     expect(stats.A.winPct).toBe(67); // 2/3 rounded
   });
+
+  it('tracks recent form as the last 5 results, oldest first', () => {
+    // A: W,W,L,W,W,W,L — 7 matches, form should keep only the trailing 5.
+    const matches = [m('A', 'X'), m('A', 'X'), m('X', 'A'), m('A', 'X'), m('A', 'X'), m('A', 'X'), m('X', 'A')];
+    const stats = computeCareerStats(['A', 'X'], matches);
+    expect(stats.A.recentForm).toEqual(['L', 'W', 'W', 'W', 'L']);
+    expect(stats.X.recentForm).toEqual(['W', 'L', 'L', 'L', 'W']);
+  });
+
+  it('does not cap recent form below 5 matches played', () => {
+    const matches = [m('A', 'X'), m('X', 'A')];
+    const stats = computeCareerStats(['A', 'X'], matches);
+    expect(stats.A.recentForm).toEqual(['W', 'L']);
+  });
 });
 
 describe('computeHeadToHeadGrid', () => {

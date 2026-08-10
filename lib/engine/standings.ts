@@ -28,6 +28,8 @@ export interface StandingsEntry {
   loseMargin: number;
   /** True once this entry is tied with a neighbor after every configured tiebreaker is applied. */
   needsDecider: boolean;
+  /** Last 5 results this season, oldest first. */
+  recentForm: ('W' | 'L')[];
 }
 
 function computeRawEntries(
@@ -45,6 +47,7 @@ function computeRawEntries(
       winMargin: 0,
       loseMargin: 0,
       needsDecider: false,
+      recentForm: [],
     });
   });
 
@@ -63,10 +66,14 @@ function computeRawEntries(
     winner.played += 1;
     winner.wins += 1;
     winner.winMargin += match.winMargin ?? 0;
+    winner.recentForm.push('W');
+    if (winner.recentForm.length > 5) winner.recentForm.shift();
 
     loser.played += 1;
     loser.losses += 1;
     loser.loseMargin += match.loseMargin ?? 0;
+    loser.recentForm.push('L');
+    if (loser.recentForm.length > 5) loser.recentForm.shift();
   });
 
   return entries;

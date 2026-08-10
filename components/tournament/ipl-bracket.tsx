@@ -1,17 +1,8 @@
 import type { PlayoffMatch } from '@/lib/services';
 import { MatchStage } from '@/types/domain/tournament';
 
-import {
-  AdvanceTag,
-  BracketCard,
-  ChampionTag,
-  EliminatedTag,
-  PendingResult,
-  RunnerUpTag,
-  ThirdPlaceTag,
-  matchLoser,
-  matchParticipants,
-} from './bracket-parts';
+import { AdvanceTag, BracketCard, EliminatedTag, PendingResult, matchLoser, matchParticipants } from './bracket-parts';
+import { ChampionTag, RunnerUpTag, ThirdPlaceTag } from './award-tags';
 
 /** Qualifier 1 & Eliminator -> Qualifier 2 -> Final, for League + IPL seasons. */
 export function IplBracket({ matches }: { matches: PlayoffMatch[] }) {

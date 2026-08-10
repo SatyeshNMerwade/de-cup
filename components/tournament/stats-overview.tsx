@@ -1,20 +1,38 @@
-import type { PlayerStatsView, StatsHighlight } from '@/lib/services';
+import { motion, useReducedMotion } from 'motion/react';
 
-function HighlightTile({ highlight }: { highlight: StatsHighlight }) {
+import type { PlayerStatsView, StatsHighlight } from '@/lib/services';
+import { FormGuide } from './form-guide';
+
+function HighlightTile({ highlight, index }: { highlight: StatsHighlight; index: number }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <motion.div
+      initial={reduceMotion ? undefined : { opacity: 0, y: 6 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.05 }}
+      className="rounded-lg border border-border bg-card p-4 shadow-sm"
+      suppressHydrationWarning
+    >
       <div className="text-xs font-bold tracking-wide text-muted-foreground uppercase">{highlight.label}</div>
       <div className="mt-1 font-serif text-xl font-semibold text-card-foreground">{highlight.value}</div>
       <div className="mt-1 text-sm text-muted-foreground">{highlight.detail}</div>
-    </div>
+    </motion.div>
   );
 }
 
-function PlayerCard({ player }: { player: PlayerStatsView }) {
+function PlayerCard({ player, index }: { player: PlayerStatsView; index: number }) {
+  const reduceMotion = useReducedMotion();
   const streakColor =
     player.currentStreak.type === 'W' ? 'text-primary' : player.currentStreak.type === 'L' ? 'text-destructive' : '';
+  const winPctColor = player.winPct >= 60 ? 'text-primary' : player.winPct <= 40 && player.played > 0 ? 'text-destructive' : 'text-card-foreground';
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <motion.div
+      initial={reduceMotion ? undefined : { opacity: 0, y: 6 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.04 }}
+      className="rounded-lg border border-border bg-card p-4 shadow-sm"
+      suppressHydrationWarning
+    >
       <h3 className="font-serif text-lg font-semibold text-card-foreground">{player.displayName}</h3>
       <dl className="mt-3 flex flex-col gap-1.5 text-sm">
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5 first:border-none first:pt-0">
@@ -25,7 +43,13 @@ function PlayerCard({ player }: { player: PlayerStatsView }) {
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Win %</dt>
-          <dd className="font-semibold text-card-foreground">{player.winPct}%</dd>
+          <dd className={`font-semibold ${winPctColor}`}>{player.winPct}%</dd>
+        </div>
+        <div className="flex items-center justify-between border-t border-dashed border-border pt-1.5">
+          <dt className="text-muted-foreground">Form</dt>
+          <dd>
+            <FormGuide results={player.recentForm} />
+          </dd>
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Longest Win Streak</dt>
@@ -56,7 +80,7 @@ function PlayerCard({ player }: { player: PlayerStatsView }) {
           <dd className="font-semibold text-card-foreground">{player.eightBallFoulsWon}</dd>
         </div>
       </dl>
-    </div>
+    </motion.div>
   );
 }
 
@@ -66,14 +90,14 @@ export function StatsOverview({ players, highlights }: { players: PlayerStatsVie
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {highlights.map((h) => (
-          <HighlightTile key={h.label} highlight={h} />
+        {highlights.map((h, i) => (
+          <HighlightTile key={h.label} highlight={h} index={i} />
         ))}
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {ranked.map((p) => (
-          <PlayerCard key={p.playerId} player={p} />
+        {ranked.map((p, i) => (
+          <PlayerCard key={p.playerId} player={p} index={i} />
         ))}
       </div>
     </div>
