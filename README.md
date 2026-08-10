@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Admin access
 
-Current login: `satyesh` / `4Z1uQr9Oi37`
+Current login: `satyesh` / `my-changed-password`
 
 There's no self-service "forgot password" flow — this app has no email sending capability, and realistically only has a couple of admin accounts. If an admin forgets their password (or you need to create/update one from the shell), use the seed script directly:
 
