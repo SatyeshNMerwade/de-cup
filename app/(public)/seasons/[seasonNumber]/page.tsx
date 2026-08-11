@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import {
   getSeasonByNumber,
+  getPreviousSeasonChampion,
   listGroupsBySeason,
   listMatchesBySeason,
   listPlayoffMatchesBySeason,
@@ -9,10 +10,11 @@ import {
   getSeasonStandings,
   getQualificationOutlook,
 } from '@/lib/services';
+import { ChampionBanner } from '@/components/tournament/champion-banner';
 import { IplBracket } from '@/components/tournament/ipl-bracket';
 import { KnockoutBracket } from '@/components/tournament/knockout-bracket';
 import { QualificationPanel } from '@/components/tournament/qualification-panel';
-import { PlayoffFormat, TournamentFormat, MatchStage } from '@/types/domain/tournament';
+import { PlayoffFormat, TournamentFormat, MatchStage, TournamentState } from '@/types/domain/tournament';
 
 import { StandingsTable } from './standings-table';
 
@@ -37,10 +39,13 @@ export default async function SeasonPage({
   const season = await getSeasonByNumber(seasonNumber);
   if (!season) notFound();
 
-  const [matches, playoffMatches, awards] = await Promise.all([
+  const isActive = season.state === TournamentState.ACTIVE;
+
+  const [matches, playoffMatches, awards, previousChampion] = await Promise.all([
     listMatchesBySeason(season.id),
     listPlayoffMatchesBySeason(season.id),
     listAwardsBySeason(season.id),
+    isActive ? getPreviousSeasonChampion(season.seasonNumber) : Promise.resolve(null),
   ]);
   const tableMatches = matches.filter((m) => m.stage === MatchStage.GROUP || m.stage === MatchStage.LEAGUE);
 
@@ -71,15 +76,39 @@ export default async function SeasonPage({
         </div>
       )}
 
+      {previousChampion && <ChampionBanner name={previousChampion} />}
+
+      {season.description && (
+        <>
+          <SectionHeading>Rules &amp; Scheduling</SectionHeading>
+          <ul className="list-disc space-y-1.5 pl-5 text-sm text-card-foreground">
+            {season.description
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+          </ul>
+        </>
+      )}
+
       <SectionHeading>{isGroupFormat ? 'Group Stage' : 'League Stage'}</SectionHeading>
       {isGroupFormat ? (
         <div className="flex flex-col gap-6">
           {groups.map((g, i) => (
-            <StandingsTable key={g.id} title={`Group ${g.name}`} entries={groupStandings[i]} />
+            <StandingsTable
+              key={g.id}
+              title={`Group ${g.name}`}
+              entries={groupStandings[i]}
+              seasonNumber={season.seasonNumber}
+            />
           ))}
         </div>
       ) : (
-        leagueStandings && <StandingsTable title="League Table" entries={leagueStandings} />
+        leagueStandings && (
+          <StandingsTable title="League Table" entries={leagueStandings} seasonNumber={season.seasonNumber} />
+        )
       )}
 
       {qualificationOutlook && (

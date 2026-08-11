@@ -9,8 +9,11 @@ export default async function PublicLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b-4 border-ring bg-gradient-to-b from-primary to-[#0a3f2e] px-6 py-8 text-center shadow-lg">
-        <Link href="/" className="font-serif text-4xl font-semibold tracking-tight text-primary-foreground">
-          DE Cup
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 font-serif text-4xl font-semibold tracking-tight text-primary-foreground"
+        >
+          DE <span aria-hidden="true">🎱</span> Cup
         </Link>
       </header>
 

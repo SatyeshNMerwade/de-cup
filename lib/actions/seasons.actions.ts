@@ -26,6 +26,7 @@ const CreateSeasonSchema = z.object({
   name: z.string().trim().min(1, 'Season name is required.'),
   ruleSetId: z.string().uuid(),
   playerIds: z.array(z.string().uuid()).min(2, 'Select at least 2 players.'),
+  description: z.string().trim().optional(),
 });
 
 /**
@@ -46,6 +47,7 @@ export async function createSeason(
     name: formData.get('name'),
     ruleSetId: formData.get('ruleSetId'),
     playerIds: formData.getAll('playerIds'),
+    description: formData.get('description') ?? undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
@@ -75,6 +77,7 @@ export async function createSeason(
           ruleSetId: ruleSet.id,
           state: TournamentState.ACTIVE,
           isPublished: true,
+          description: data.description || null,
         })
         .returning();
 

@@ -76,6 +76,16 @@ export function CreateSeasonForm({
         </div>
       </div>
 
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground">Description / rules (optional, shown on the public season page)</label>
+        <textarea
+          name="description"
+          rows={5}
+          placeholder="One line per rule — each becomes a bullet point on the season page."
+          className="rounded-md border border-border px-2 py-1 text-sm"
+        />
+      </div>
+
       <button
         type="submit"
         disabled={pending}
