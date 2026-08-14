@@ -12,11 +12,13 @@ export function RecordMatchForm({
   seasonNumber,
   playerOne,
   playerTwo,
+  tracksToss,
 }: {
   matchId: string;
   seasonNumber: number;
   playerOne: { id: string; displayName: string };
   playerTwo: { id: string; displayName: string };
+  tracksToss: boolean;
 }) {
   const [state, formAction, pending] = useActionState(recordMatchResult, initialState);
 
@@ -43,6 +45,32 @@ export function RecordMatchForm({
           <option value={MatchResultType.EIGHT_BALL_FOUL}>8-ball foul</option>
         </select>
       </div>
+
+      {tracksToss && (
+        <>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Toss winner</label>
+            <select name="tossWinnerId" required defaultValue="" className="rounded-md border border-border px-2 py-1">
+              <option value="" disabled>
+                Select…
+              </option>
+              <option value={playerOne.id}>{playerOne.displayName}</option>
+              <option value={playerTwo.id}>{playerTwo.displayName}</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Broke first</label>
+            <select name="firstBreakerId" required defaultValue="" className="rounded-md border border-border px-2 py-1">
+              <option value="" disabled>
+                Select…
+              </option>
+              <option value={playerOne.id}>{playerOne.displayName}</option>
+              <option value={playerTwo.id}>{playerTwo.displayName}</option>
+            </select>
+          </div>
+        </>
+      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">Balls left</label>

@@ -27,6 +27,7 @@ const CreateSeasonSchema = z.object({
   ruleSetId: z.string().uuid(),
   playerIds: z.array(z.string().uuid()).min(2, 'Select at least 2 players.'),
   description: z.string().trim().optional(),
+  tracksTossData: z.boolean(),
 });
 
 /**
@@ -48,6 +49,7 @@ export async function createSeason(
     ruleSetId: formData.get('ruleSetId'),
     playerIds: formData.getAll('playerIds'),
     description: formData.get('description') ?? undefined,
+    tracksTossData: formData.get('tracksTossData') === 'on',
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
@@ -78,6 +80,7 @@ export async function createSeason(
           state: TournamentState.ACTIVE,
           isPublished: true,
           description: data.description || null,
+          tracksTossData: data.tracksTossData,
         })
         .returning();
 

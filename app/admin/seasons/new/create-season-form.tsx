@@ -56,6 +56,11 @@ export function CreateSeasonForm({
         </div>
       </div>
 
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="tracksTossData" defaultChecked />
+        Track toss winner &amp; first break for this season
+      </label>
+
       <div>
         <label className="text-xs text-muted-foreground">
           Players (round-robin schedule generated automatically — every pair plays once)

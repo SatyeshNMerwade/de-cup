@@ -62,6 +62,9 @@ export default async function AdminSeasonPage({
                   winMargin={m.winMargin}
                   resultType={m.resultType}
                   remarks={m.remarks}
+                  tracksToss={season.tracksTossData}
+                  tossWinnerId={m.tossWinnerId}
+                  firstBreakerId={m.firstBreakerId}
                 />
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -74,6 +77,7 @@ export default async function AdminSeasonPage({
                 seasonNumber={seasonNumber}
                 playerOne={{ id: m.playerOne.id, displayName: m.playerOne.displayName }}
                 playerTwo={{ id: m.playerTwo.id, displayName: m.playerTwo.displayName }}
+                tracksToss={season.tracksTossData}
               />
             )}
           </div>

@@ -30,6 +30,8 @@ export const seasons = pgTable(
 
     isPublished: boolean('is_published').default(false).notNull(),
 
+    tracksTossData: boolean('tracks_toss_data').default(false).notNull(),
+
     startDate: date('start_date'),
 
     endDate: date('end_date'),

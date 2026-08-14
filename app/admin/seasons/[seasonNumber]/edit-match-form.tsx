@@ -17,6 +17,9 @@ export function EditableLeagueMatch({
   winMargin,
   resultType,
   remarks,
+  tracksToss,
+  tossWinnerId,
+  firstBreakerId,
 }: {
   matchId: string;
   seasonNumber: number;
@@ -27,6 +30,9 @@ export function EditableLeagueMatch({
   winMargin: number | null;
   resultType: string | null;
   remarks: string | null;
+  tracksToss: boolean;
+  tossWinnerId: string | null;
+  firstBreakerId: string | null;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [state, formAction, pending] = useActionState(editMatchResult, initialState);
@@ -86,6 +92,42 @@ export function EditableLeagueMatch({
           <option value={MatchResultType.EIGHT_BALL_FOUL}>8-ball foul</option>
         </select>
       </div>
+
+      {tracksToss && (
+        <>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Toss winner</label>
+            <select
+              name="tossWinnerId"
+              required
+              defaultValue={tossWinnerId ?? ''}
+              className="rounded-md border border-border px-2 py-1"
+            >
+              <option value="" disabled>
+                Select…
+              </option>
+              <option value={playerOne.id}>{playerOne.displayName}</option>
+              <option value={playerTwo.id}>{playerTwo.displayName}</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Broke first</label>
+            <select
+              name="firstBreakerId"
+              required
+              defaultValue={firstBreakerId ?? ''}
+              className="rounded-md border border-border px-2 py-1"
+            >
+              <option value="" disabled>
+                Select…
+              </option>
+              <option value={playerOne.id}>{playerOne.displayName}</option>
+              <option value={playerTwo.id}>{playerTwo.displayName}</option>
+            </select>
+          </div>
+        </>
+      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">Balls left</label>
