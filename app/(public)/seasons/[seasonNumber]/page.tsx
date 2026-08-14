@@ -8,12 +8,14 @@ import {
   listPlayoffMatchesBySeason,
   listAwardsBySeason,
   getSeasonStandings,
-  getQualificationOutlook,
+  getQualificationDisplay,
 } from '@/lib/services';
 import { ChampionBanner } from '@/components/tournament/champion-banner';
 import { IplBracket } from '@/components/tournament/ipl-bracket';
 import { KnockoutBracket } from '@/components/tournament/knockout-bracket';
 import { QualificationPanel } from '@/components/tournament/qualification-panel';
+import { QualificationScenario } from '@/components/tournament/qualification-scenario';
+import { SeasonAwards } from '@/components/tournament/season-awards';
 import { PlayoffFormat, TournamentFormat, MatchStage, TournamentState } from '@/types/domain/tournament';
 
 import { StandingsTable } from './standings-table';
@@ -55,7 +57,17 @@ export default async function SeasonPage({
     ? await Promise.all(groups.map((g) => getSeasonStandings(season.id, { groupId: g.id })))
     : [];
   const leagueStandings = isGroupFormat ? null : await getSeasonStandings(season.id);
-  const qualificationOutlook = isGroupFormat ? null : await getQualificationOutlook(season.id);
+  const qualificationDisplay = isGroupFormat ? null : await getQualificationDisplay(season.id);
+  const qualificationRules = season.ruleSet.rules.qualification;
+
+  const showPercentage =
+    qualificationDisplay != null &&
+    qualificationRules.enableQualificationPercentage &&
+    !(!qualificationDisplay.percentage.available && qualificationDisplay.percentage.reason === 'not-applicable');
+  const showScenario =
+    qualificationDisplay != null &&
+    qualificationRules.enableQualificationScenario &&
+    !(!qualificationDisplay.scenario.available && qualificationDisplay.scenario.reason === 'not-applicable');
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -65,16 +77,7 @@ export default async function SeasonPage({
         {season.ruleSet.name} v{season.ruleSet.version}
       </p>
 
-      {awards.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-2">
-          {awards.map((a) => (
-            <span key={a.id} className="rounded-full border border-border bg-card px-3 py-1 text-sm shadow-sm">
-              <span className="font-semibold text-card-foreground">{a.name}</span>{' '}
-              <span className="text-muted-foreground">— {a.player.displayName}</span>
-            </span>
-          ))}
-        </div>
-      )}
+      <SeasonAwards awards={awards} />
 
       {previousChampion && <ChampionBanner name={previousChampion} />}
 
@@ -111,10 +114,23 @@ export default async function SeasonPage({
         )
       )}
 
-      {qualificationOutlook && (
+      {showPercentage && qualificationDisplay && (
         <>
-          <SectionHeading>Qualification Chances</SectionHeading>
-          <QualificationPanel outlook={qualificationOutlook} />
+          <SectionHeading>Qualification Percentage</SectionHeading>
+          <QualificationPanel
+            display={qualificationDisplay.percentage}
+            qualificationSlots={qualificationRules.qualificationSlots}
+          />
+        </>
+      )}
+
+      {showScenario && qualificationDisplay && (
+        <>
+          <SectionHeading>Qualification Scenario</SectionHeading>
+          <QualificationScenario
+            display={qualificationDisplay.scenario}
+            qualificationSlots={qualificationRules.qualificationSlots}
+          />
         </>
       )}
 

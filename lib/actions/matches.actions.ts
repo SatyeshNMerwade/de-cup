@@ -88,6 +88,10 @@ export async function recordMatchResult(
 
   const progression = await advanceSeasonProgression(match.seasonId);
 
+  // advanceSeasonProgression can flip the season to COMPLETED (Final just
+  // recorded) — the home page lists every season's state, so it needs
+  // revalidating too, not just this season's own page.
+  revalidatePath('/');
   revalidatePath(`/seasons/${data.seasonNumber}`);
   revalidatePath(`/admin/seasons/${data.seasonNumber}`);
   revalidatePath('/admin');

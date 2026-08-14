@@ -31,3 +31,19 @@ const TIE_BREAKER_LABELS: Record<'WIN_MARGIN' | 'LOSE_MARGIN', string> = {
 export function formatTieBreakerLabel(criterion: 'WIN_MARGIN' | 'LOSE_MARGIN'): string {
   return TIE_BREAKER_LABELS[criterion];
 }
+
+/** 1 -> "1st", 2 -> "2nd", 11 -> "11th", 21 -> "21st", etc. */
+export function formatOrdinal(n: number): string {
+  const remainder100 = n % 100;
+  if (remainder100 >= 11 && remainder100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}

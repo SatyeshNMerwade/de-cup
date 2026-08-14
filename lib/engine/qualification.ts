@@ -249,6 +249,29 @@ export interface OpponentOutlook {
   headToHead: { wins: number; losses: number };
 }
 
+export interface ScenarioOutcome {
+  opponentId: string;
+  won: boolean;
+}
+
+/**
+ * One specific combination of this player's own remaining results (not just
+ * a win *count* — which exact opponents they beat/lose to). qualified/
+ * contested/eliminated/totalCombos are a plain, unweighted count of how the
+ * *other* remaining matches (the ones not involving this player) could go —
+ * deliberately not head-to-head-probability-weighted like floorPct/ceilingPct
+ * above, since this is answering "how many of the ways could this go", not
+ * "how likely is it".
+ */
+export interface QualificationScenario {
+  outcomes: ScenarioOutcome[];
+  ownWins: number;
+  qualifiedCount: number;
+  contestedCount: number;
+  eliminatedCount: number;
+  totalCombos: number;
+}
+
 export interface PlayerQualificationOutlook {
   playerId: string;
   currentWins: number;
@@ -266,6 +289,8 @@ export interface PlayerQualificationOutlook {
   certainElimMaxWins: number | null;
   reason: string;
   opponents: OpponentOutlook[];
+  /** Every combination of this player's own remaining results, most wins first. */
+  scenarios: QualificationScenario[];
 }
 
 export function computeQualificationOutlook(
@@ -305,6 +330,20 @@ export function computeQualificationOutlook(
     }
   });
 
+  // Unweighted per-scenario tally, keyed by which *specific* own matches
+  // were won (a bitmask over ownSlots[id], not just a win count) — this is
+  // what the detailed scenario breakdown groups by, distinct from the
+  // probability-weighted `breakdown` above.
+  type ScenarioBucket = { total: number; qualified: number; contested: number; eliminated: number };
+  const scenarioCounts: Record<string, Record<number, ScenarioBucket>> = {};
+  playerIds.forEach((id) => {
+    scenarioCounts[id] = {};
+    const combos = 1 << ownSlots[id].length;
+    for (let s = 0; s < combos; s++) {
+      scenarioCounts[id][s] = { total: 0, qualified: 0, contested: 0, eliminated: 0 };
+    }
+  });
+
   const r = remainingMatches.length;
   const totalCombos = 1 << r;
 
@@ -335,14 +374,22 @@ export function computeQualificationOutlook(
 
     playerIds.forEach((id) => {
       let ownWins = 0;
-      ownSlots[id].forEach(({ idx, isP1 }) => {
+      let ownSubMask = 0;
+      ownSlots[id].forEach(({ idx, isP1 }, slotIdx) => {
         const bit = (mask >> idx) & 1;
         const isWinner = isP1 ? bit === 1 : bit === 0;
-        if (isWinner) ownWins++;
+        if (isWinner) {
+          ownWins++;
+          ownSubMask |= 1 << slotIdx;
+        }
       });
       const bucket = breakdown[id][ownWins];
       bucket.total += weight;
       bucket[classification[id].classification] += weight;
+
+      const scenarioBucket = scenarioCounts[id][ownSubMask];
+      scenarioBucket.total += 1;
+      scenarioBucket[classification[id].classification] += 1;
     });
   }
 
@@ -393,6 +440,27 @@ export function computeQualificationOutlook(
       return { opponentId, winProbability, headToHead: { wins, losses } };
     });
 
+    const scenarios: QualificationScenario[] = [];
+    const combos = 1 << n;
+    for (let subMask = 0; subMask < combos; subMask++) {
+      const bucket = scenarioCounts[id][subMask];
+      const outcomes: ScenarioOutcome[] = ownSlots[id].map(({ idx, isP1 }, slotIdx) => {
+        const m = remainingMatches[idx];
+        const opponentId = isP1 ? m.playerTwoId : m.playerOneId;
+        const won = ((subMask >> slotIdx) & 1) === 1;
+        return { opponentId, won };
+      });
+      scenarios.push({
+        outcomes,
+        ownWins: outcomes.filter((o) => o.won).length,
+        qualifiedCount: bucket.qualified,
+        contestedCount: bucket.contested,
+        eliminatedCount: bucket.eliminated,
+        totalCombos: bucket.total,
+      });
+    }
+    scenarios.sort((a, b) => b.ownWins - a.ownWins);
+
     result[id] = {
       playerId: id,
       currentWins: currentWins[id] ?? 0,
@@ -405,8 +473,39 @@ export function computeQualificationOutlook(
       certainElimMaxWins,
       reason,
       opponents,
+      scenarios,
     };
   });
 
   return result;
+}
+
+export interface ScheduledMatchInput {
+  matchNumber: number;
+  playerOneId: string;
+  playerTwoId: string;
+}
+
+/**
+ * The first `matchNumber` (in schedule order, not completion order) at
+ * which every player has appeared in at least 2 matches — the same
+ * "everyoneHasPlayedTwice" reveal threshold the qualification outlook uses,
+ * exposed as a specific number so a not-yet-open panel can say when it
+ * opens instead of just disappearing. Precomputable from the fixed
+ * round-robin schedule alone, no results needed. Null if the full schedule
+ * never reaches it (too few matches for the player count).
+ */
+export function findQualificationRevealMatchNumber(
+  scheduleMatches: ScheduledMatchInput[],
+  playerIds: string[],
+): number | null {
+  const played = new Map<string, number>(playerIds.map((id) => [id, 0]));
+  const ordered = scheduleMatches.slice().sort((a, b) => a.matchNumber - b.matchNumber);
+
+  for (const m of ordered) {
+    played.set(m.playerOneId, (played.get(m.playerOneId) ?? 0) + 1);
+    played.set(m.playerTwoId, (played.get(m.playerTwoId) ?? 0) + 1);
+    if (playerIds.every((id) => (played.get(id) ?? 0) >= 2)) return m.matchNumber;
+  }
+  return null;
 }

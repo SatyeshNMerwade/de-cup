@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   classifyPlayers,
   computeQualificationOutlook,
+  findQualificationRevealMatchNumber,
   headToHeadWinProbability,
   type QualificationMatchInput,
 } from '@/lib/engine/qualification';
@@ -169,5 +170,109 @@ describe('computeQualificationOutlook', () => {
     // Winning their head-to-head guarantees B's spot; losing guarantees elimination.
     expect(outlook.B.guaranteedMinWins).toBe(1);
     expect(outlook.B.certainElimMaxWins).toBe(0);
+
+    // B's only remaining match is against C, and it's the *only* remaining
+    // match in the whole field — so "the other matches" have exactly one
+    // way to go: no way at all (totalCombos === 1) for either of B's own
+    // scenarios, matching the reference screenshot's "1/1 (100%)" pattern.
+    expect(outlook.B.scenarios).toHaveLength(2);
+    const [winScenario, loseScenario] = outlook.B.scenarios;
+    expect(winScenario.ownWins).toBe(1);
+    expect(winScenario.outcomes).toEqual([{ opponentId: 'C', won: true }]);
+    expect(winScenario.totalCombos).toBe(1);
+    expect(winScenario.qualifiedCount).toBe(1);
+    expect(winScenario.eliminatedCount).toBe(0);
+    expect(loseScenario.ownWins).toBe(0);
+    expect(loseScenario.outcomes).toEqual([{ opponentId: 'C', won: false }]);
+    expect(loseScenario.totalCombos).toBe(1);
+    expect(loseScenario.eliminatedCount).toBe(1);
+    expect(loseScenario.qualifiedCount).toBe(0);
+  });
+
+  it('breaks down every specific combination of a player\'s own remaining matches, not just a win count', () => {
+    // D has two remaining matches (vs A, vs B) and they're the *only*
+    // remaining matches in the field, so every scenario's "other matches"
+    // denominator is 1 — but which specific opponent D beats/loses to
+    // still changes the outcome (a 1-win tie with A plays out differently
+    // than a 1-win tie with B), which a win-count-only bucket would blur.
+    const completedMatches: QualificationMatchInput[] = [match('A', 'C', 'A'), match('B', 'C', 'B')];
+    const remainingMatches = [
+      { playerOneId: 'D', playerTwoId: 'A' },
+      { playerOneId: 'D', playerTwoId: 'B' },
+    ];
+
+    const outlook = computeQualificationOutlook({
+      playerIds: ['A', 'B', 'C', 'D'],
+      completedMatches,
+      remainingMatches,
+      allTimeMatches: completedMatches,
+      qualificationSlots: 2,
+      tieBreakerOrder: TIEBREAK_ORDER,
+    });
+
+    expect(outlook.D.scenarios).toHaveLength(4);
+    const [winBoth, beatsAOnly, beatsBOnly, loseBoth] = outlook.D.scenarios;
+
+    // Beats both — clearly ahead of the boundary, no tiebreak needed.
+    expect(winBoth.ownWins).toBe(2);
+    expect(winBoth.outcomes).toEqual([
+      { opponentId: 'A', won: true },
+      { opponentId: 'B', won: true },
+    ]);
+    expect(winBoth).toMatchObject({ qualifiedCount: 1, contestedCount: 0, eliminatedCount: 0, totalCombos: 1 });
+
+    // Loses both — clearly behind, no tiebreak needed either.
+    expect(loseBoth.ownWins).toBe(0);
+    expect(loseBoth.outcomes).toEqual([
+      { opponentId: 'A', won: false },
+      { opponentId: 'B', won: false },
+    ]);
+    expect(loseBoth).toMatchObject({ qualifiedCount: 0, contestedCount: 0, eliminatedCount: 1, totalCombos: 1 });
+
+    // A single win ties D with whichever rival it beat, on a still-open Win
+    // Margin (D's hypothetical win has no known margin) — genuinely
+    // contested, not qualified or eliminated outright.
+    expect(beatsAOnly.ownWins).toBe(1);
+    expect(beatsAOnly.outcomes).toEqual([
+      { opponentId: 'A', won: true },
+      { opponentId: 'B', won: false },
+    ]);
+    expect(beatsAOnly).toMatchObject({ qualifiedCount: 0, contestedCount: 1, eliminatedCount: 0, totalCombos: 1 });
+
+    expect(beatsBOnly.ownWins).toBe(1);
+    expect(beatsBOnly.outcomes).toEqual([
+      { opponentId: 'A', won: false },
+      { opponentId: 'B', won: true },
+    ]);
+    expect(beatsBOnly).toMatchObject({ qualifiedCount: 0, contestedCount: 1, eliminatedCount: 0, totalCombos: 1 });
+  });
+});
+
+describe('findQualificationRevealMatchNumber', () => {
+  it('finds the first scheduled match at which every player has reached 2 played', () => {
+    const schedule = [
+      { matchNumber: 1, playerOneId: 'A', playerTwoId: 'B' },
+      { matchNumber: 2, playerOneId: 'C', playerTwoId: 'D' },
+      { matchNumber: 3, playerOneId: 'A', playerTwoId: 'C' },
+      { matchNumber: 4, playerOneId: 'B', playerTwoId: 'D' },
+    ];
+    // After match 1: A=1,B=1. After 2: C=1,D=1. After 3: A=2,C=2 (B,D still 1).
+    // After 4: B=2,D=2 — that's the first point everyone has >= 2.
+    expect(findQualificationRevealMatchNumber(schedule, ['A', 'B', 'C', 'D'])).toBe(4);
+  });
+
+  it('is order-independent of array input order — it sorts by matchNumber itself', () => {
+    const schedule = [
+      { matchNumber: 3, playerOneId: 'A', playerTwoId: 'C' },
+      { matchNumber: 1, playerOneId: 'A', playerTwoId: 'B' },
+      { matchNumber: 4, playerOneId: 'B', playerTwoId: 'D' },
+      { matchNumber: 2, playerOneId: 'C', playerTwoId: 'D' },
+    ];
+    expect(findQualificationRevealMatchNumber(schedule, ['A', 'B', 'C', 'D'])).toBe(4);
+  });
+
+  it('returns null when the schedule never reaches the threshold', () => {
+    const schedule = [{ matchNumber: 1, playerOneId: 'A', playerTwoId: 'B' }];
+    expect(findQualificationRevealMatchNumber(schedule, ['A', 'B', 'C'])).toBeNull();
   });
 });
