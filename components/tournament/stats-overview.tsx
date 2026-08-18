@@ -79,6 +79,14 @@ function PlayerCard({ player, index }: { player: PlayerStatsView; index: number 
           <dt className="text-muted-foreground">Won via Opponent&apos;s Foul</dt>
           <dd className="font-semibold text-card-foreground">{player.eightBallFoulsWon}</dd>
         </div>
+        <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
+          <dt className="text-muted-foreground">Fouls Committed</dt>
+          <dd className="font-semibold text-card-foreground">{player.foulsCommitted}</dd>
+        </div>
+        <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
+          <dt className="text-muted-foreground">Won via Foul</dt>
+          <dd className="font-semibold text-card-foreground">{player.foulsWon}</dd>
+        </div>
       </dl>
     </motion.div>
   );

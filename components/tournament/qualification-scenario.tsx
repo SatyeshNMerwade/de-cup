@@ -57,7 +57,11 @@ export function QualificationScenario({
   if (!display.available) {
     return (
       <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground">Opens once at least one match is complete.</p>
+        <p className="text-sm text-muted-foreground">
+          {display.opensAtMatchNumber != null
+            ? `Opens once Match ${display.opensAtMatchNumber} is complete.`
+            : 'Opens once enough matches are played.'}
+        </p>
       </div>
     );
   }

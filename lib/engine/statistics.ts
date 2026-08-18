@@ -25,6 +25,7 @@ export interface CareerMatchInput {
   winnerId: string;
   winMargin: number | null;
   isEightBallFoul: boolean;
+  isFoul: boolean;
 }
 
 export interface BiggestWin {
@@ -49,6 +50,8 @@ export interface PlayerCareerStats {
   biggestWin: BiggestWin | null;
   eightBallFoulsCommitted: number;
   eightBallFoulsWon: number;
+  foulsCommitted: number;
+  foulsWon: number;
   longestWinStreak: number;
   currentStreak: CurrentStreak;
   /** Last 5 results, oldest first. */
@@ -76,6 +79,8 @@ export function computeCareerStats(
       biggestWin: null,
       eightBallFoulsCommitted: 0,
       eightBallFoulsWon: 0,
+      foulsCommitted: 0,
+      foulsWon: 0,
       longestWinStreak: 0,
       currentStreak: { type: null, count: 0 },
       recentForm: [],
@@ -126,6 +131,11 @@ export function computeCareerStats(
     if (m.isEightBallFoul) {
       if (loser) loser.eightBallFoulsCommitted += 1;
       if (winner) winner.eightBallFoulsWon += 1;
+    }
+
+    if (m.isFoul) {
+      if (loser) loser.foulsCommitted += 1;
+      if (winner) winner.foulsWon += 1;
     }
   });
 

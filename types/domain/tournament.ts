@@ -60,6 +60,8 @@ export enum MatchResultType {
   NORMAL = 'NORMAL',
 
   EIGHT_BALL_FOUL = 'EIGHT_BALL_FOUL',
+
+  FOUL = 'FOUL',
 }
 
 export enum AwardCategory {

@@ -53,6 +53,7 @@ export function StatsProfile({ profiles }: { profiles: PlayerProfileView[] }) {
                     {m.margin != null ? `, ${m.margin} ball(s) left` : ''}
                   </span>
                   {m.isEightBallFoul && <span className="text-xs text-muted-foreground italic">🎱 8-Ball Mistake</span>}
+                  {m.isFoul && <span className="text-xs text-muted-foreground italic">⚠️ Foul</span>}
                 </div>
               );
             })

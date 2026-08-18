@@ -43,6 +43,7 @@ export function RecordMatchForm({
         <select name="resultType" defaultValue={MatchResultType.NORMAL} className="rounded-md border border-border px-2 py-1">
           <option value={MatchResultType.NORMAL}>Normal</option>
           <option value={MatchResultType.EIGHT_BALL_FOUL}>8-ball foul</option>
+          <option value={MatchResultType.FOUL}>Foul</option>
         </select>
       </div>
 

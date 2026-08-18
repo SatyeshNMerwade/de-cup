@@ -40,6 +40,7 @@ export interface MatchHistoryEntry {
   won: boolean;
   margin: number | null;
   isEightBallFoul: boolean;
+  isFoul: boolean;
   remarks: string | null;
 }
 
@@ -111,6 +112,7 @@ function toEngineInput(m: CareerMatch): CareerMatchInput {
     winnerId: m.winnerId as string,
     winMargin: m.winMargin,
     isEightBallFoul: m.resultType === MatchResultType.EIGHT_BALL_FOUL,
+    isFoul: m.resultType === MatchResultType.FOUL,
   };
 }
 
@@ -149,6 +151,10 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
   const maxFouls = foulCandidates.reduce((max, p) => Math.max(max, p.eightBallFoulsCommitted), 0);
   const foulLeaders = foulCandidates.filter((p) => p.eightBallFoulsCommitted === maxFouls);
 
+  const generalFoulCandidates = players.filter((p) => p.foulsCommitted > 0);
+  const maxGeneralFouls = generalFoulCandidates.reduce((max, p) => Math.max(max, p.foulsCommitted), 0);
+  const generalFoulLeaders = generalFoulCandidates.filter((p) => p.foulsCommitted === maxGeneralFouls);
+
   let maxMargin: number | null = null;
   players.forEach((p) => {
     if (p.biggestWin && (maxMargin === null || p.biggestWin.margin > maxMargin)) maxMargin = p.biggestWin.margin;
@@ -180,6 +186,13 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
       value: joinNames(foulLeaders.map((p) => p.displayName)),
       detail: foulLeaders.length
         ? `Lost ${maxFouls} match${maxFouls === 1 ? '' : 'es'} by pocketing the 8-ball`
+        : 'No blunders yet',
+    },
+    {
+      label: 'Foul Blunders',
+      value: joinNames(generalFoulLeaders.map((p) => p.displayName)),
+      detail: generalFoulLeaders.length
+        ? `Lost ${maxGeneralFouls} match${maxGeneralFouls === 1 ? '' : 'es'} by committing a foul`
         : 'No blunders yet',
     },
   ];
@@ -253,6 +266,7 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
           // "-2 balls left", on the losing player's own history row).
           margin: m.winMargin,
           isEightBallFoul: m.resultType === MatchResultType.EIGHT_BALL_FOUL,
+          isFoul: m.resultType === MatchResultType.FOUL,
           remarks: m.remarks,
         };
       });

@@ -90,6 +90,7 @@ export function EditableLeagueMatch({
         >
           <option value={MatchResultType.NORMAL}>Normal</option>
           <option value={MatchResultType.EIGHT_BALL_FOUL}>8-ball foul</option>
+          <option value={MatchResultType.FOUL}>Foul</option>
         </select>
       </div>
 
