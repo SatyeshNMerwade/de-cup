@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'motion/react';
 
 import type { QualificationStatus, StandingsEntryView } from '@/lib/services';
 import { FormGuide } from '@/components/tournament/form-guide';
+import { MatchResultType } from '@/types/domain/tournament';
 
 function QualificationBadge({ status }: { status: QualificationStatus }) {
   if (status === 'qualified') {
@@ -147,6 +148,12 @@ export function StandingsTable({
                               <span className={`font-semibold ${h.won ? 'text-primary' : 'text-destructive'}`}>
                                 {h.won ? 'Won' : 'Lost'}, {h.ballsLeft} ball{h.ballsLeft === 1 ? '' : 's'} left
                               </span>
+                              {h.resultType === MatchResultType.EIGHT_BALL_FOUL && (
+                                <span className="ml-1 text-xs text-muted-foreground italic">🎱 8-Ball Mistake</span>
+                              )}
+                              {h.resultType === MatchResultType.FOUL && (
+                                <span className="ml-1 text-xs text-muted-foreground italic">⚠️ Foul</span>
+                              )}
                             </div>
                           ))
                         )}
