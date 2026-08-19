@@ -39,4 +39,16 @@ export const matchRelations = relations(matches, ({ one }) => ({
     references: [players.id],
     relationName: 'loser_matches',
   }),
+
+  tossWinner: one(players, {
+    fields: [matches.tossWinnerId],
+    references: [players.id],
+    relationName: 'toss_winner_matches',
+  }),
+
+  firstBreaker: one(players, {
+    fields: [matches.firstBreakerId],
+    references: [players.id],
+    relationName: 'first_breaker_matches',
+  }),
 }));

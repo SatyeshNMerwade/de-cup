@@ -7,11 +7,13 @@ import type { StatsPageData } from '@/lib/services';
 import { StatsOverview } from './stats-overview';
 import { StatsRivalry } from './stats-rivalry';
 import { StatsProfile } from './stats-profile';
+import { StatsToss } from './stats-toss';
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'rivalry', label: 'Rivalry' },
   { key: 'profile', label: 'Player Profile' },
+  { key: 'toss', label: 'Toss & Break' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -39,8 +41,9 @@ export function StatsTabs({ data }: { data: StatsPageData }) {
       </div>
 
       {tab === 'overview' && <StatsOverview players={data.players} highlights={data.highlights} />}
-      {tab === 'rivalry' && <StatsRivalry headToHead={data.headToHead} />}
+      {tab === 'rivalry' && <StatsRivalry headToHead={data.headToHead} breakSplit={data.tossBreak?.breakSplit} />}
       {tab === 'profile' && <StatsProfile profiles={data.profiles} />}
+      {tab === 'toss' && <StatsToss tossBreak={data.tossBreak} />}
     </div>
   );
 }

@@ -25,6 +25,7 @@ export interface CareerMatchInput {
   winnerId: string;
   winMargin: number | null;
   isEightBallFoul: boolean;
+  isFoul: boolean;
 }
 
 export interface BiggestWin {
@@ -49,6 +50,8 @@ export interface PlayerCareerStats {
   biggestWin: BiggestWin | null;
   eightBallFoulsCommitted: number;
   eightBallFoulsWon: number;
+  foulsCommitted: number;
+  foulsWon: number;
   longestWinStreak: number;
   currentStreak: CurrentStreak;
   /** Last 5 results, oldest first. */
@@ -76,6 +79,8 @@ export function computeCareerStats(
       biggestWin: null,
       eightBallFoulsCommitted: 0,
       eightBallFoulsWon: 0,
+      foulsCommitted: 0,
+      foulsWon: 0,
       longestWinStreak: 0,
       currentStreak: { type: null, count: 0 },
       recentForm: [],
@@ -127,6 +132,11 @@ export function computeCareerStats(
       if (loser) loser.eightBallFoulsCommitted += 1;
       if (winner) winner.eightBallFoulsWon += 1;
     }
+
+    if (m.isFoul) {
+      if (loser) loser.foulsCommitted += 1;
+      if (winner) winner.foulsWon += 1;
+    }
   });
 
   playerIds.forEach((id) => {
@@ -160,6 +170,154 @@ export function computeHeadToHeadGrid(
     const loserId = m.winnerId === m.playerOneId ? m.playerTwoId : m.playerOneId;
     if (grid[m.winnerId]?.[loserId]) grid[m.winnerId][loserId].wins += 1;
     if (grid[loserId]?.[m.winnerId]) grid[loserId][m.winnerId].losses += 1;
+  });
+
+  return grid;
+}
+
+/**
+ * Toss/first-break stats — only meaningful for seasons that opted into
+ * tracking it (seasons.tracksTossData), so callers should only pass matches
+ * that actually carry both fields (see statistics.service.ts's
+ * toTossBreakInput). `choseToBreak`/`deferred` are only incremented when the
+ * player is also the toss winner, so they're mutually exclusive and always
+ * sum to `tossesWon`.
+ */
+export interface TossBreakMatchInput {
+  playerOneId: string;
+  playerTwoId: string;
+  winnerId: string;
+  tossWinnerId: string;
+  firstBreakerId: string;
+}
+
+export interface PlayerTossBreakStats {
+  playerId: string;
+  tossesPlayed: number;
+  tossesWon: number;
+  tossWinPct: number;
+  choseToBreak: number;
+  deferred: number;
+  brokeFirstCount: number;
+  breakWins: number;
+  breakLosses: number;
+  breakWinPct: number;
+  nonBreakWins: number;
+  nonBreakLosses: number;
+  nonBreakWinPct: number;
+  breakAdvantage: number;
+}
+
+export function computeTossBreakStats(
+  playerIds: string[],
+  matches: TossBreakMatchInput[],
+): Record<string, PlayerTossBreakStats> {
+  const stats: Record<string, PlayerTossBreakStats> = {};
+  playerIds.forEach((id) => {
+    stats[id] = {
+      playerId: id,
+      tossesPlayed: 0,
+      tossesWon: 0,
+      tossWinPct: 0,
+      choseToBreak: 0,
+      deferred: 0,
+      brokeFirstCount: 0,
+      breakWins: 0,
+      breakLosses: 0,
+      breakWinPct: 0,
+      nonBreakWins: 0,
+      nonBreakLosses: 0,
+      nonBreakWinPct: 0,
+      breakAdvantage: 0,
+    };
+  });
+
+  matches.forEach((m) => {
+    [m.playerOneId, m.playerTwoId].forEach((id) => {
+      const s = stats[id];
+      if (!s) return;
+
+      s.tossesPlayed += 1;
+      const wonToss = m.tossWinnerId === id;
+      if (wonToss) s.tossesWon += 1;
+
+      const isWin = m.winnerId === id;
+      if (m.firstBreakerId === id) {
+        s.brokeFirstCount += 1;
+        if (isWin) s.breakWins += 1;
+        else s.breakLosses += 1;
+        if (wonToss) s.choseToBreak += 1;
+      } else {
+        if (isWin) s.nonBreakWins += 1;
+        else s.nonBreakLosses += 1;
+        if (wonToss) s.deferred += 1;
+      }
+    });
+  });
+
+  playerIds.forEach((id) => {
+    const s = stats[id];
+    s.tossWinPct = s.tossesPlayed > 0 ? Math.round((s.tossesWon / s.tossesPlayed) * 100) : 0;
+    const breakPlayed = s.breakWins + s.breakLosses;
+    s.breakWinPct = breakPlayed > 0 ? Math.round((s.breakWins / breakPlayed) * 100) : 0;
+    const nonBreakPlayed = s.nonBreakWins + s.nonBreakLosses;
+    s.nonBreakWinPct = nonBreakPlayed > 0 ? Math.round((s.nonBreakWins / nonBreakPlayed) * 100) : 0;
+    s.breakAdvantage = s.breakWinPct - s.nonBreakWinPct;
+  });
+
+  return stats;
+}
+
+export interface LeagueBreakInsight {
+  trackedMatches: number;
+  firstBreakerWins: number;
+  firstBreakerWinPct: number;
+}
+
+/** Does breaking first actually correlate with winning, across every tracked match? */
+export function computeLeagueBreakInsight(matches: TossBreakMatchInput[]): LeagueBreakInsight {
+  const trackedMatches = matches.length;
+  const firstBreakerWins = matches.filter((m) => m.winnerId === m.firstBreakerId).length;
+  return {
+    trackedMatches,
+    firstBreakerWins,
+    firstBreakerWinPct: trackedMatches > 0 ? Math.round((firstBreakerWins / trackedMatches) * 100) : 0,
+  };
+}
+
+export interface HeadToHeadBreakCell {
+  whenBrokeFirst: HeadToHeadCell;
+  whenOpponentBrokeFirst: HeadToHeadCell;
+}
+
+/** Same grid shape as computeHeadToHeadGrid, split further by who broke first. */
+export function computeHeadToHeadBreakSplit(
+  playerIds: string[],
+  matches: TossBreakMatchInput[],
+): Record<string, Record<string, HeadToHeadBreakCell>> {
+  const grid: Record<string, Record<string, HeadToHeadBreakCell>> = {};
+  playerIds.forEach((a) => {
+    grid[a] = {};
+    playerIds.forEach((b) => {
+      if (a !== b) {
+        grid[a][b] = {
+          whenBrokeFirst: { wins: 0, losses: 0 },
+          whenOpponentBrokeFirst: { wins: 0, losses: 0 },
+        };
+      }
+    });
+  });
+
+  matches.forEach((m) => {
+    [m.playerOneId, m.playerTwoId].forEach((rowId) => {
+      const colId = rowId === m.playerOneId ? m.playerTwoId : m.playerOneId;
+      const cell = grid[rowId]?.[colId];
+      if (!cell) return;
+
+      const bucket = m.firstBreakerId === rowId ? cell.whenBrokeFirst : cell.whenOpponentBrokeFirst;
+      if (m.winnerId === rowId) bucket.wins += 1;
+      else bucket.losses += 1;
+    });
   });
 
   return grid;

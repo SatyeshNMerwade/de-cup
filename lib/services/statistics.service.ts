@@ -5,9 +5,15 @@ import { seasons, matches } from '@/database/schema';
 import {
   computeCareerStats,
   computeHeadToHeadGrid,
+  computeHeadToHeadBreakSplit,
+  computeTossBreakStats,
+  computeLeagueBreakInsight,
   type CareerMatchInput,
   type HeadToHeadCell,
+  type HeadToHeadBreakCell,
   type PlayerCareerStats,
+  type PlayerTossBreakStats,
+  type TossBreakMatchInput,
 } from '@/lib/engine/statistics';
 import { headToHeadWinProbability, type QualificationMatchInput } from '@/lib/engine/qualification';
 import { formatStageLabel } from '@/lib/helpers/format.helper';
@@ -34,6 +40,7 @@ export interface MatchHistoryEntry {
   won: boolean;
   margin: number | null;
   isEightBallFoul: boolean;
+  isFoul: boolean;
   remarks: string | null;
 }
 
@@ -57,11 +64,24 @@ export interface HeadToHeadGridView {
   biggestRivalry: { aName: string; bName: string; meetings: number; record: string }[];
 }
 
+export interface PlayerTossBreakStatsView extends PlayerTossBreakStats {
+  displayName: string;
+}
+
+export interface TossBreakStatsView {
+  trackedMatches: number;
+  leagueBreakWinPct: number;
+  players: PlayerTossBreakStatsView[];
+  breakSplit: Record<string, Record<string, HeadToHeadBreakCell>>;
+}
+
 export interface StatsPageData {
   players: PlayerStatsView[];
   highlights: StatsHighlight[];
   headToHead: HeadToHeadGridView;
   profiles: PlayerProfileView[];
+  /** null until at least one season opts into tracksTossData and has a recorded match. */
+  tossBreak: TossBreakStatsView | null;
 }
 
 function joinNames(names: string[]): string {
@@ -69,6 +89,17 @@ function joinNames(names: string[]): string {
   if (names.length === 1) return names[0];
   if (names.length === 2) return `${names[0]} & ${names[1]}`;
   return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+}
+
+function toTossBreakInput(m: CareerMatch): TossBreakMatchInput | null {
+  if (!m.tossWinnerId || !m.firstBreakerId) return null;
+  return {
+    playerOneId: m.playerOneId,
+    playerTwoId: m.playerTwoId,
+    winnerId: m.winnerId as string,
+    tossWinnerId: m.tossWinnerId,
+    firstBreakerId: m.firstBreakerId,
+  };
 }
 
 function toEngineInput(m: CareerMatch): CareerMatchInput {
@@ -81,6 +112,7 @@ function toEngineInput(m: CareerMatch): CareerMatchInput {
     winnerId: m.winnerId as string,
     winMargin: m.winMargin,
     isEightBallFoul: m.resultType === MatchResultType.EIGHT_BALL_FOUL,
+    isFoul: m.resultType === MatchResultType.FOUL,
   };
 }
 
@@ -119,6 +151,10 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
   const maxFouls = foulCandidates.reduce((max, p) => Math.max(max, p.eightBallFoulsCommitted), 0);
   const foulLeaders = foulCandidates.filter((p) => p.eightBallFoulsCommitted === maxFouls);
 
+  const generalFoulCandidates = players.filter((p) => p.foulsCommitted > 0);
+  const maxGeneralFouls = generalFoulCandidates.reduce((max, p) => Math.max(max, p.foulsCommitted), 0);
+  const generalFoulLeaders = generalFoulCandidates.filter((p) => p.foulsCommitted === maxGeneralFouls);
+
   let maxMargin: number | null = null;
   players.forEach((p) => {
     if (p.biggestWin && (maxMargin === null || p.biggestWin.margin > maxMargin)) maxMargin = p.biggestWin.margin;
@@ -150,6 +186,13 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
       value: joinNames(foulLeaders.map((p) => p.displayName)),
       detail: foulLeaders.length
         ? `Lost ${maxFouls} match${maxFouls === 1 ? '' : 'es'} by pocketing the 8-ball`
+        : 'No blunders yet',
+    },
+    {
+      label: 'Foul Blunders',
+      value: joinNames(generalFoulLeaders.map((p) => p.displayName)),
+      detail: generalFoulLeaders.length
+        ? `Lost ${maxGeneralFouls} match${maxGeneralFouls === 1 ? '' : 'es'} by committing a foul`
         : 'No blunders yet',
     },
   ];
@@ -223,6 +266,7 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
           // "-2 balls left", on the losing player's own history row).
           margin: m.winMargin,
           isEightBallFoul: m.resultType === MatchResultType.EIGHT_BALL_FOUL,
+          isFoul: m.resultType === MatchResultType.FOUL,
           remarks: m.remarks,
         };
       });
@@ -247,10 +291,30 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
     };
   });
 
+  // ---- Toss & first-break (only seasons with tracksTossData contribute) ----
+  const trackedMatches = log
+    .map(toTossBreakInput)
+    .filter((m): m is TossBreakMatchInput => m !== null);
+
+  let tossBreak: TossBreakStatsView | null = null;
+  if (trackedMatches.length > 0) {
+    const tossBreakStats = computeTossBreakStats(playerIds, trackedMatches);
+    tossBreak = {
+      trackedMatches: trackedMatches.length,
+      leagueBreakWinPct: computeLeagueBreakInsight(trackedMatches).firstBreakerWinPct,
+      players: playerIds.map((id) => ({
+        ...tossBreakStats[id],
+        displayName: nameById.get(id) ?? id,
+      })),
+      breakSplit: computeHeadToHeadBreakSplit(playerIds, trackedMatches),
+    };
+  }
+
   return {
     players,
     highlights,
     headToHead: { playerIds, names: Object.fromEntries(nameById), grid: headToHeadGrid, biggestRivalry },
     profiles,
+    tossBreak,
   };
 }

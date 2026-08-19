@@ -209,7 +209,7 @@ export interface QualificationScenarioPlayerView {
 export type QualificationScenarioDisplay =
   | { available: true; players: QualificationScenarioPlayerView[] }
   | { available: false; reason: 'not-applicable' }
-  | { available: false; reason: 'locked' };
+  | { available: false; reason: 'locked'; opensAtMatchNumber: number | null };
 
 export interface QualificationDisplayView {
   percentage: QualificationPercentageDisplay;
@@ -248,18 +248,33 @@ export async function getQualificationDisplay(seasonId: string): Promise<Qualifi
     playedCount.set(m.playerTwoId, (playedCount.get(m.playerTwoId) ?? 0) + 1);
   });
   const everyoneHasPlayedTwice = inputs.playerIds.every((id) => (playedCount.get(id) ?? 0) >= 2);
-  const scenarioReady = inputs.completed.length > 0 && inputs.remaining.length <= SCENARIO_MAX_REMAINING;
+  // Scenario opens on the same data-meaningfulness bar Percentage uses,
+  // additionally capped by the enumeration's performance ceiling — so the
+  // two panels reveal together, and Scenario never opens early enough to
+  // blow the ~11s+ 2^remaining budget the cap exists to prevent.
+  const scenarioReady = everyoneHasPlayedTwice && inputs.remaining.length <= SCENARIO_MAX_REMAINING;
+
+  const everyoneTwiceMatchNumber = findQualificationRevealMatchNumber(inputs.tableMatches, inputs.playerIds);
+  const perfCapMatchNumber = Math.max(1, inputs.tableMatches.length - SCENARIO_MAX_REMAINING);
+  const scenarioOpensAtMatchNumber =
+    everyoneTwiceMatchNumber == null ? null : Math.max(everyoneTwiceMatchNumber, perfCapMatchNumber);
 
   const lockedPercentage = (): QualificationPercentageDisplay => ({
     available: false,
     reason: 'locked',
-    opensAtMatchNumber: findQualificationRevealMatchNumber(inputs.tableMatches, inputs.playerIds),
+    opensAtMatchNumber: everyoneTwiceMatchNumber,
+  });
+  const lockedScenario = (): QualificationScenarioDisplay => ({
+    available: false,
+    reason: 'locked',
+    opensAtMatchNumber: scenarioOpensAtMatchNumber,
   });
 
-  // Skip the expensive enumeration entirely when neither section is ready
-  // to use it — most of a season's early matches fall in this bucket.
-  if (!everyoneHasPlayedTwice && !scenarioReady) {
-    return { percentage: lockedPercentage(), scenario: { available: false, reason: 'locked' } };
+  // scenarioReady now implies everyoneHasPlayedTwice, so this single check
+  // covers both — skip the expensive enumeration entirely until Percentage's
+  // own bar is met, same perf-conscious intent as before.
+  if (!everyoneHasPlayedTwice) {
+    return { percentage: lockedPercentage(), scenario: lockedScenario() };
   }
 
   const outlook = computeQualificationOutlook({
@@ -273,13 +288,11 @@ export async function getQualificationDisplay(seasonId: string): Promise<Qualifi
   const outlookViews = buildOutlookViews(inputs, outlook);
   const outlookById = new Map(outlookViews.map((v) => [v.playerId, v]));
 
-  const percentage: QualificationPercentageDisplay = everyoneHasPlayedTwice
-    ? { available: true, outlook: outlookViews }
-    : lockedPercentage();
+  const percentage: QualificationPercentageDisplay = { available: true, outlook: outlookViews };
 
   const scenario: QualificationScenarioDisplay = scenarioReady
     ? { available: true, players: buildScenarioPlayerViews(inputs, outlookById) }
-    : { available: false, reason: 'locked' };
+    : lockedScenario();
 
   return { percentage, scenario };
 }

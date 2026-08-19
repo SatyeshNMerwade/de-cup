@@ -22,6 +22,8 @@ const RecordMatchResultSchema = z.object({
   resultType: z.nativeEnum(MatchResultType),
   ballsLeft: z.coerce.number().int().min(0).optional(),
   remarks: z.string().trim().optional(),
+  tossWinnerId: z.string().uuid().optional(),
+  firstBreakerId: z.string().uuid().optional(),
 });
 
 export interface RecordMatchResultState {
@@ -45,6 +47,8 @@ export async function recordMatchResult(
     resultType: formData.get('resultType'),
     ballsLeft: formData.get('ballsLeft') || undefined,
     remarks: formData.get('remarks') || undefined,
+    tossWinnerId: formData.get('tossWinnerId') || undefined,
+    firstBreakerId: formData.get('firstBreakerId') || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
@@ -60,7 +64,10 @@ export async function recordMatchResult(
   const winMargin = data.ballsLeft;
   const loseMargin = -data.ballsLeft;
 
-  const match = await db.query.matches.findFirst({ where: eq(matches.id, data.matchId) });
+  const match = await db.query.matches.findFirst({
+    where: eq(matches.id, data.matchId),
+    with: { season: true },
+  });
   if (!match) {
     return { error: 'Match not found.' };
   }
@@ -71,6 +78,18 @@ export async function recordMatchResult(
     return { error: 'Winner must be one of the two players in this match.' };
   }
   const loserId = data.winnerId === match.playerOneId ? match.playerTwoId : match.playerOneId;
+
+  if (match.season.tracksTossData) {
+    if (!data.tossWinnerId || !data.firstBreakerId) {
+      return { error: 'Select who won the toss and who broke first.' };
+    }
+    if (data.tossWinnerId !== match.playerOneId && data.tossWinnerId !== match.playerTwoId) {
+      return { error: 'Toss winner must be one of the two players in this match.' };
+    }
+    if (data.firstBreakerId !== match.playerOneId && data.firstBreakerId !== match.playerTwoId) {
+      return { error: 'First breaker must be one of the two players in this match.' };
+    }
+  }
 
   await db
     .update(matches)
@@ -83,6 +102,8 @@ export async function recordMatchResult(
       remarks: data.remarks ?? null,
       status: MatchStatus.COMPLETED,
       completedAt: new Date(),
+      tossWinnerId: data.tossWinnerId ?? null,
+      firstBreakerId: data.firstBreakerId ?? null,
     })
     .where(eq(matches.id, data.matchId));
 
@@ -126,6 +147,8 @@ export async function editMatchResult(
     resultType: formData.get('resultType'),
     ballsLeft: formData.get('ballsLeft') || undefined,
     remarks: formData.get('remarks') || undefined,
+    tossWinnerId: formData.get('tossWinnerId') || undefined,
+    firstBreakerId: formData.get('firstBreakerId') || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
@@ -138,7 +161,10 @@ export async function editMatchResult(
   const winMargin = data.ballsLeft;
   const loseMargin = -data.ballsLeft;
 
-  const match = await db.query.matches.findFirst({ where: eq(matches.id, data.matchId) });
+  const match = await db.query.matches.findFirst({
+    where: eq(matches.id, data.matchId),
+    with: { season: true },
+  });
   if (!match) {
     return { error: 'Match not found.' };
   }
@@ -159,6 +185,18 @@ export async function editMatchResult(
     return { error: 'All League matches are complete — results are locked and can no longer be edited.' };
   }
 
+  if (match.season.tracksTossData) {
+    if (!data.tossWinnerId || !data.firstBreakerId) {
+      return { error: 'Select who won the toss and who broke first.' };
+    }
+    if (data.tossWinnerId !== match.playerOneId && data.tossWinnerId !== match.playerTwoId) {
+      return { error: 'Toss winner must be one of the two players in this match.' };
+    }
+    if (data.firstBreakerId !== match.playerOneId && data.firstBreakerId !== match.playerTwoId) {
+      return { error: 'First breaker must be one of the two players in this match.' };
+    }
+  }
+
   const loserId = data.winnerId === match.playerOneId ? match.playerTwoId : match.playerOneId;
 
   await db
@@ -170,6 +208,8 @@ export async function editMatchResult(
       loseMargin,
       resultType: data.resultType,
       remarks: data.remarks ?? null,
+      tossWinnerId: data.tossWinnerId ?? null,
+      firstBreakerId: data.firstBreakerId ?? null,
     })
     .where(eq(matches.id, data.matchId));
 

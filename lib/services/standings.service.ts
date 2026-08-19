@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { matches, seasonRegistrations } from '@/database/schema';
 import { computeStandings, type StandingsMatchInput } from '@/lib/engine/standings';
-import { MatchStage, MatchStatus, TournamentFormat } from '@/types/domain/tournament';
+import { MatchStage, MatchStatus, TournamentFormat, MatchResultType } from '@/types/domain/tournament';
 
 import { getQualificationOutlook } from './qualification.service';
 import { getSeasonById } from './seasons.service';
@@ -15,6 +15,7 @@ export interface PlayerMatchHistoryEntry {
   opponentName: string;
   won: boolean;
   ballsLeft: number;
+  resultType: MatchResultType | null;
 }
 
 export interface StandingsEntryView {
@@ -95,12 +96,14 @@ export async function getSeasonStandings(
         opponentName: nameById.get(m.playerTwoId) ?? m.playerTwoId,
         won: playerOneWon,
         ballsLeft,
+        resultType: m.resultType as MatchResultType | null,
       });
       matchHistoryById.get(m.playerTwoId)?.push({
         matchNumber: m.matchNumber,
         opponentName: nameById.get(m.playerOneId) ?? m.playerOneId,
         won: !playerOneWon,
         ballsLeft,
+        resultType: m.resultType as MatchResultType | null,
       });
     });
 

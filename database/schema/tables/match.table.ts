@@ -37,6 +37,10 @@ export const matches = pgTable(
 
     loserId: uuid('loser_id').references(() => players.id, FK_RESTRICT),
 
+    tossWinnerId: uuid('toss_winner_id').references(() => players.id, FK_RESTRICT),
+
+    firstBreakerId: uuid('first_breaker_id').references(() => players.id, FK_RESTRICT),
+
     winMargin: integer('win_margin'),
 
     loseMargin: integer('lose_margin'),

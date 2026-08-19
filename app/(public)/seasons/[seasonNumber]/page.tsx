@@ -16,7 +16,7 @@ import { KnockoutBracket } from '@/components/tournament/knockout-bracket';
 import { QualificationPanel } from '@/components/tournament/qualification-panel';
 import { QualificationScenario } from '@/components/tournament/qualification-scenario';
 import { SeasonAwards } from '@/components/tournament/season-awards';
-import { PlayoffFormat, TournamentFormat, MatchStage, TournamentState } from '@/types/domain/tournament';
+import { PlayoffFormat, TournamentFormat, MatchStage, TournamentState, MatchResultType } from '@/types/domain/tournament';
 
 import { StandingsTable } from './standings-table';
 
@@ -153,9 +153,17 @@ export default async function SeasonPage({
             </span>
             <span className="w-48 shrink-0 text-right font-medium">
               {m.winner ? (
-                <span className="text-primary">
-                  {m.winner.displayName} won{m.winMargin != null ? `, ${m.winMargin} left` : ''}
-                </span>
+                <>
+                  <span className="text-primary">
+                    {m.winner.displayName} won{m.winMargin != null ? `, ${m.winMargin} left` : ''}
+                  </span>
+                  {m.resultType === MatchResultType.EIGHT_BALL_FOUL && (
+                    <span className="block text-xs font-normal text-muted-foreground italic">🎱 8-Ball Mistake</span>
+                  )}
+                  {m.resultType === MatchResultType.FOUL && (
+                    <span className="block text-xs font-normal text-muted-foreground italic">⚠️ Foul</span>
+                  )}
+                </>
               ) : (
                 <span className="text-muted-foreground italic">Scheduled</span>
               )}

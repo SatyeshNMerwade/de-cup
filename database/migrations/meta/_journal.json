@@ -15,6 +15,20 @@
       "when": 1786395850506,
       "tag": "0001_aspiring_wendell_vaughn",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786739838728,
+      "tag": "0002_abnormal_pixie",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787075761806,
+      "tag": "0003_omniscient_skullbuster",
+      "breakpoints": true
     }
   ]
 }

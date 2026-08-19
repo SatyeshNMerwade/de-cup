@@ -16,6 +16,7 @@ function m(
     winnerId,
     winMargin: 1,
     isEightBallFoul: false,
+    isFoul: false,
     ...overrides,
   };
 }
@@ -60,6 +61,26 @@ describe('computeCareerStats', () => {
     expect(stats.X.eightBallFoulsCommitted).toBe(2);
     expect(stats.A.eightBallFoulsWon).toBe(2);
     expect(stats.A.eightBallFoulsCommitted).toBe(0);
+  });
+
+  it('counts general fouls independently of 8-ball fouls', () => {
+    const matches = [
+      m('A', 'X', { isFoul: true, winMargin: 0 }),
+      m('A', 'X', { isEightBallFoul: true, winMargin: 0 }),
+      m('X', 'A'),
+    ];
+    const stats = computeCareerStats(['A', 'X'], matches);
+    // The general-foul match moves only the general counters...
+    expect(stats.X.foulsCommitted).toBe(1);
+    expect(stats.A.foulsWon).toBe(1);
+    // ...and the 8-ball-foul match moves only the 8-ball counters.
+    expect(stats.X.eightBallFoulsCommitted).toBe(1);
+    expect(stats.A.eightBallFoulsWon).toBe(1);
+    // Neither type contaminates the other player's or the other type's count.
+    expect(stats.A.foulsCommitted).toBe(0);
+    expect(stats.A.eightBallFoulsCommitted).toBe(0);
+    expect(stats.X.foulsWon).toBe(0);
+    expect(stats.X.eightBallFoulsWon).toBe(0);
   });
 
   it('computes win percentage from played matches', () => {
