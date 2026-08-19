@@ -13,7 +13,7 @@ export function SeasonSwitcher({ seasons }: { seasons: { seasonNumber: number; n
     <select
       value={current}
       onChange={(e) => router.push(e.target.value === 'stats' ? '/stats' : `/seasons/${e.target.value}`)}
-      className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold text-foreground"
+      className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-ring/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <option value="" disabled>
         Choose a season

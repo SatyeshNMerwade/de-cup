@@ -98,7 +98,7 @@ export function StandingsTable({
                       onClick={() => toggle(e.playerId)}
                       aria-expanded={isExpanded}
                       aria-label={`${isExpanded ? 'Hide' : 'Show'} ${e.displayName}'s matches`}
-                      className="mr-1 text-xs text-muted-foreground hover:text-foreground"
+                      className="mr-1 text-xs text-muted-foreground transition-transform hover:text-foreground active:scale-90"
                     >
                       {isExpanded ? '▲' : '▼'}
                     </button>
@@ -142,8 +142,8 @@ export function StandingsTable({
                           e.matchHistory.map((h, idx) => (
                             <div key={idx} className="text-sm">
                               <span className="text-muted-foreground">
-                                Match {h.matchNumber} — vs{' '}
-                                <span className="font-medium text-card-foreground">{h.opponentName}</span> —{' '}
+                                Match {h.matchNumber} vs{' '}
+                                <span className="font-medium text-card-foreground">{h.opponentName}</span>:{' '}
                               </span>
                               <span className={`font-semibold ${h.won ? 'text-primary' : 'text-destructive'}`}>
                                 {h.won ? 'Won' : 'Lost'}, {h.ballsLeft} ball{h.ballsLeft === 1 ? '' : 's'} left

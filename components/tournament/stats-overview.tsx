@@ -58,7 +58,7 @@ function PlayerCard({ player, index }: { player: PlayerStatsView; index: number 
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Current Streak</dt>
           <dd className={`font-semibold ${streakColor}`}>
-            {player.currentStreak.type ? `${player.currentStreak.count}${player.currentStreak.type}` : '—'}
+            {player.currentStreak.type ? `${player.currentStreak.count}${player.currentStreak.type}` : '–'}
           </dd>
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
@@ -68,7 +68,7 @@ function PlayerCard({ player, index }: { player: PlayerStatsView; index: number 
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Biggest Win</dt>
           <dd className="font-semibold text-card-foreground">
-            {player.biggestWin ? `${player.biggestWin.margin} vs ${player.biggestWinOpponentName}` : '—'}
+            {player.biggestWin ? `${player.biggestWin.margin} vs ${player.biggestWinOpponentName}` : '–'}
           </dd>
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">

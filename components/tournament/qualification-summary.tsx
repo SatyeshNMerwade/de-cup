@@ -89,12 +89,12 @@ export function QualificationSummary({
             <>
               You currently lead on {formatTieBreakerLabel(data.rivalThreshold.criterion)},{' '}
               {data.rivalThreshold.aheadValue} to {data.rivalThreshold.behindValue}. As things stand, that&apos;s
-              enough to hold the tiebreaker — though it can shift if either of you plays more matches.
+              enough to hold the tiebreaker, though it can shift if either of you plays more matches.
             </>
           ) : (
             <>
               They currently lead on {formatTieBreakerLabel(data.rivalThreshold.criterion)},{' '}
-              {data.rivalThreshold.aheadValue} to {data.rivalThreshold.behindValue} — you need at least +
+              {data.rivalThreshold.aheadValue} to {data.rivalThreshold.behindValue}. You need at least +
               {data.rivalThreshold.threshold} {formatTieBreakerLabel(data.rivalThreshold.criterion)} from your
               remaining matches to move ahead (assuming their numbers don&apos;t change further).
             </>
@@ -110,7 +110,7 @@ export function QualificationSummary({
       {data.opponents.length > 0 && (
         <div className="mt-4">
           <div className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
-            Remaining matches — win chance based on head-to-head record
+            Remaining matches: win chance based on head-to-head record
           </div>
           <div className="mt-2 flex flex-col gap-1.5">
             {data.opponents.map((o) => (

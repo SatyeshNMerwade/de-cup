@@ -5,7 +5,7 @@
  * chip carries its own W/L letter, not color alone.
  */
 export function FormGuide({ results }: { results: ('W' | 'L')[] }) {
-  if (results.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+  if (results.length === 0) return <span className="text-xs text-muted-foreground">–</span>;
 
   return (
     <div className="flex items-center gap-1">
