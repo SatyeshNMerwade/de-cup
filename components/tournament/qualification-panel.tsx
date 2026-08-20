@@ -6,6 +6,7 @@ import type { QualificationPercentageDisplay } from '@/lib/services';
 
 import { PlayerPillSelector } from './player-pill-selector';
 import { QualificationSummary } from './qualification-summary';
+import { Reveal } from './reveal';
 
 export function QualificationPanel({
   display,
@@ -35,11 +36,11 @@ export function QualificationPanel({
   if (!selected) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+    <Reveal className="rounded-lg border border-border bg-card p-5 shadow-sm">
       <PlayerPillSelector players={outlook} selectedId={selected.playerId} onSelect={setSelectedId} />
       <div className="mt-5">
         <QualificationSummary data={selected} qualificationSlots={qualificationSlots} />
       </div>
-    </div>
+    </Reveal>
   );
 }

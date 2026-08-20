@@ -16,7 +16,7 @@ export function PlayerPillSelector({
           key={p.playerId}
           type="button"
           onClick={() => onSelect(p.playerId)}
-          className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
+          className={`rounded-full px-3 py-1 text-sm font-semibold transition-all active:scale-95 ${
             p.playerId === selectedId
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'

@@ -2,6 +2,7 @@
 
 import { ChampionTag, RunnerUpTag, ThirdPlaceTag } from './award-tags';
 import { Confetti } from './confetti';
+import { PopIn } from './reveal';
 
 export interface SeasonAwardView {
   id: string;
@@ -34,10 +35,12 @@ export function SeasonAwards({ awards }: { awards: SeasonAwardView[] }) {
       {others.length > 0 && (
         <div className="flex flex-wrap justify-center gap-2">
           {others.map((a) => (
-            <span key={a.id} className="rounded-full border border-border bg-card px-3 py-1 text-sm shadow-sm">
-              <span className="font-semibold text-card-foreground">{a.name}</span>{' '}
-              <span className="text-muted-foreground">— {a.player.displayName}</span>
-            </span>
+            <PopIn key={a.id}>
+              <span className="rounded-full border border-border bg-card px-3 py-1 text-sm shadow-sm">
+                <span className="font-semibold text-card-foreground">{a.name}</span>{' '}
+                <span className="text-muted-foreground">: {a.player.displayName}</span>
+              </span>
+            </PopIn>
           ))}
         </div>
       )}

@@ -17,7 +17,7 @@ export function StatsProfile({ profiles }: { profiles: PlayerProfileView[] }) {
             key={p.playerId}
             type="button"
             onClick={() => setSelectedId(p.playerId)}
-            className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
+            className={`rounded-full px-3 py-1 text-sm font-semibold transition-all active:scale-95 ${
               p.playerId === selected.playerId
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -63,7 +63,7 @@ export function StatsProfile({ profiles }: { profiles: PlayerProfileView[] }) {
         {selected.remainingMatches.length > 0 && (
           <div className="mt-5 border-t border-border pt-4">
             <div className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
-              Remaining matches — win chance based on head-to-head record
+              Remaining matches: win chance based on head-to-head record
             </div>
             <div className="mt-2 flex flex-col gap-1.5">
               {selected.remainingMatches.map((m) => (

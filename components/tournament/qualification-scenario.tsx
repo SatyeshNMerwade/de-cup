@@ -7,6 +7,7 @@ import { formatOrdinal } from '@/lib/helpers/format.helper';
 
 import { PlayerPillSelector } from './player-pill-selector';
 import { QualificationSummary } from './qualification-summary';
+import { Reveal } from './reveal';
 
 function scenarioLabel(scenario: QualificationScenarioView): string {
   const total = scenario.outcomes.length;
@@ -32,12 +33,12 @@ function scenarioVerdict(scenario: QualificationScenarioView): string {
   }
   if (qualifiedCount === totalCombos) {
     return totalCombos === 1
-      ? 'Qualifies — no other matches remain to change it.'
+      ? 'Qualifies. No other matches remain to change it.'
       : 'Qualifies no matter how the other matches go.';
   }
   if (eliminatedCount === totalCombos) {
     return totalCombos === 1
-      ? 'Does not qualify — no other matches remain to change it.'
+      ? 'Does not qualify. No other matches remain to change it.'
       : 'Does not qualify no matter how the other matches go.';
   }
   return `Qualifies in ${qualifiedCount} and misses in ${eliminatedCount} of the ${totalCombos} ways the other matches could go.`;
@@ -71,7 +72,7 @@ export function QualificationScenario({
   if (!selected) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+    <Reveal className="rounded-lg border border-border bg-card p-5 shadow-sm">
       <PlayerPillSelector players={players} selectedId={selected.playerId} onSelect={setSelectedId} />
 
       <div className="mt-5">
@@ -106,6 +107,6 @@ export function QualificationScenario({
           </div>
         )}
       </div>
-    </div>
+    </Reveal>
   );
 }
