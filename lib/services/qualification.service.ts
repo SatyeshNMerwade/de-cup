@@ -217,13 +217,22 @@ export interface QualificationDisplayView {
 }
 
 /**
+ * Scenario's real reveal gate: every player must have 2 or fewer of their
+ * own matches left. With 4+ remaining, a player's own-scenario breakdown
+ * has 2^4=16+ rows to reason about — genuinely confusing, and mostly
+ * academic detail this early. At <=2 remaining there are at most 4 own
+ * scenarios, which is the point the panel becomes a readable "here's
+ * exactly what has to happen" instead of a probability dump.
+ */
+const SCENARIO_MAX_REMAINING_PER_PLAYER = 2;
+
+/**
  * computeQualificationOutlook enumerates every 2^remaining combination of
- * results — necessarily expensive once remaining is large (measured
- * ~11s at remaining=20 in dev). Percentage's own gate ("everyone has
- * played twice") naturally keeps remaining low by the time it fires in a
- * real season, but Scenario's much looser gate ("at least one match
- * complete") doesn't — so Scenario additionally waits for remaining to
- * drop to a size the enumeration can comfortably handle in a page load.
+ * results across the whole season — necessarily expensive once remaining is
+ * large (measured ~11s at remaining=20 in dev). SCENARIO_MAX_REMAINING_PER_PLAYER
+ * already keeps this low for realistic league sizes (every player at <=2
+ * remaining bounds the season-wide total to roughly the player count), but
+ * this stays as a hard safety net for unusually large fields.
  */
 const SCENARIO_MAX_REMAINING = 16;
 
@@ -248,11 +257,20 @@ export async function getQualificationDisplay(seasonId: string): Promise<Qualifi
     playedCount.set(m.playerTwoId, (playedCount.get(m.playerTwoId) ?? 0) + 1);
   });
   const everyoneHasPlayedTwice = inputs.playerIds.every((id) => (playedCount.get(id) ?? 0) >= 2);
-  // Scenario opens on the same data-meaningfulness bar Percentage uses,
-  // additionally capped by the enumeration's performance ceiling — so the
-  // two panels reveal together, and Scenario never opens early enough to
-  // blow the ~11s+ 2^remaining budget the cap exists to prevent.
-  const scenarioReady = everyoneHasPlayedTwice && inputs.remaining.length <= SCENARIO_MAX_REMAINING;
+
+  const remainingCountByPlayer = new Map<string, number>();
+  inputs.remaining.forEach((m) => {
+    remainingCountByPlayer.set(m.playerOneId, (remainingCountByPlayer.get(m.playerOneId) ?? 0) + 1);
+    remainingCountByPlayer.set(m.playerTwoId, (remainingCountByPlayer.get(m.playerTwoId) ?? 0) + 1);
+  });
+  const everyonePlayerHasFewRemaining = inputs.playerIds.every(
+    (id) => (remainingCountByPlayer.get(id) ?? 0) <= SCENARIO_MAX_REMAINING_PER_PLAYER,
+  );
+  // Scenario needs Percentage's own bar met too (it reuses Percentage's
+  // outlook computation), plus the enumeration's hard safety cap for
+  // unusually large fields — see SCENARIO_MAX_REMAINING above.
+  const scenarioReady =
+    everyoneHasPlayedTwice && everyonePlayerHasFewRemaining && inputs.remaining.length <= SCENARIO_MAX_REMAINING;
 
   const everyoneTwiceMatchNumber = findQualificationRevealMatchNumber(inputs.tableMatches, inputs.playerIds);
   const perfCapMatchNumber = Math.max(1, inputs.tableMatches.length - SCENARIO_MAX_REMAINING);
