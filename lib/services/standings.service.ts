@@ -18,6 +18,10 @@ export interface PlayerMatchHistoryEntry {
   resultType: MatchResultType | null;
 }
 
+export interface PlayerPendingMatchEntry {
+  opponentName: string;
+}
+
 export interface StandingsEntryView {
   playerId: string;
   displayName: string;
@@ -41,6 +45,8 @@ export interface StandingsEntryView {
   qualificationStatus: QualificationStatus;
   /** This player's completed table-stage matches, oldest first. */
   matchHistory: PlayerMatchHistoryEntry[];
+  /** Opponents this player hasn't yet played in the table stage — order carries no scheduling meaning. */
+  pendingMatches: PlayerPendingMatchEntry[];
 }
 
 /**
@@ -71,6 +77,7 @@ export async function getSeasonStandings(
       : and(eq(matches.seasonId, seasonId), eq(matches.stage, tableStage)),
   });
   const completed = tableMatches.filter((m) => m.status === MatchStatus.COMPLETED && m.winnerId);
+  const pending = tableMatches.filter((m) => m.status !== MatchStatus.COMPLETED);
 
   const inputs: StandingsMatchInput[] = completed.map((m) => ({
     playerOneId: m.playerOneId,
@@ -107,6 +114,12 @@ export async function getSeasonStandings(
       });
     });
 
+  const pendingMatchesById = new Map<string, PlayerPendingMatchEntry[]>(playerIds.map((id) => [id, []]));
+  pending.forEach((m) => {
+    pendingMatchesById.get(m.playerOneId)?.push({ opponentName: nameById.get(m.playerTwoId) ?? m.playerTwoId });
+    pendingMatchesById.get(m.playerTwoId)?.push({ opponentName: nameById.get(m.playerOneId) ?? m.playerOneId });
+  });
+
   const qualificationStatusById = new Map<string, QualificationStatus>();
   if (season.tournamentFormat === TournamentFormat.LEAGUE && !options?.groupId) {
     if (tableMatches.length > 0 && completed.length === tableMatches.length) {
@@ -132,5 +145,6 @@ export async function getSeasonStandings(
     points: s.wins * pointsPerWin,
     qualificationStatus: qualificationStatusById.get(s.playerId) ?? null,
     matchHistory: matchHistoryById.get(s.playerId) ?? [],
+    pendingMatches: pendingMatchesById.get(s.playerId) ?? [],
   }));
 }

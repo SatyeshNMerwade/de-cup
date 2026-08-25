@@ -23,9 +23,7 @@ export function QualificationPanel({
     return (
       <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <p className="text-sm text-muted-foreground">
-          {display.opensAtMatchNumber != null
-            ? `Opens once Match ${display.opensAtMatchNumber} is complete.`
-            : 'Opens once enough matches are played.'}
+          Will be displayed once every player has completed at least 2 matches.
         </p>
       </div>
     );

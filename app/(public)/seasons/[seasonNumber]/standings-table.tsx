@@ -158,6 +158,24 @@ export function StandingsTable({
                           ))
                         )}
                       </div>
+
+                      {e.pendingMatches.length > 0 && (
+                        <>
+                          <div className="mt-4 text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                            Yet to play
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {e.pendingMatches.map((p, idx) => (
+                              <span
+                                key={idx}
+                                className="rounded-full bg-muted px-2.5 py-1 text-sm text-card-foreground"
+                              >
+                                {p.opponentName}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </td>
                   </motion.tr>
                 )}
