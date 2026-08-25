@@ -59,7 +59,7 @@ export function QualificationScenario({
     return (
       <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <p className="text-sm text-muted-foreground">
-          Will be displayed once every player has completed at least 2 matches.
+          Will be displayed once every player has 2 or fewer matches left to play.
         </p>
       </div>
     );
