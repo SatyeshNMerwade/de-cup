@@ -50,7 +50,7 @@ export function StatsProfile({ profiles }: { profiles: PlayerProfileView[] }) {
                   </span>
                   <span className={`font-semibold ${m.won ? 'text-primary' : 'text-destructive'}`}>
                     {m.won ? 'Won' : 'Lost'}
-                    {m.margin != null ? `, ${m.margin} ball(s) left` : ''}
+                    {m.margin != null && !m.isEightBallFoul && !m.isFoul ? `, ${m.margin} ball(s) left` : ''}
                   </span>
                   {m.isEightBallFoul && <span className="text-xs text-muted-foreground italic">🎱 8-Ball Mistake</span>}
                   {m.isFoul && <span className="text-xs text-muted-foreground italic">⚠️ Foul</span>}

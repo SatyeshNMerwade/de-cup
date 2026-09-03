@@ -23,8 +23,16 @@ function InsightTile({ tossBreak }: { tossBreak: TossBreakStatsView }) {
 
 function PlayerCard({ player, index }: { player: PlayerTossBreakStatsView; index: number }) {
   const reduceMotion = useReducedMotion();
-  const advantageColor =
-    player.breakAdvantage > 0 ? 'text-primary' : player.breakAdvantage < 0 ? 'text-destructive' : 'text-card-foreground';
+  const breakPlayed = player.breakWins + player.breakLosses;
+  const nonBreakPlayed = player.nonBreakWins + player.nonBreakLosses;
+  const hasBreakAdvantageData = breakPlayed > 0 && nonBreakPlayed > 0;
+  const advantageColor = !hasBreakAdvantageData
+    ? 'text-muted-foreground'
+    : player.breakAdvantage > 0
+      ? 'text-primary'
+      : player.breakAdvantage < 0
+        ? 'text-destructive'
+        : 'text-card-foreground';
   return (
     <motion.div
       initial={reduceMotion ? undefined : { opacity: 0, y: 6 }}
@@ -57,17 +65,16 @@ function PlayerCard({ player, index }: { player: PlayerTossBreakStatsView; index
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Break Win %</dt>
-          <dd className="font-semibold text-card-foreground">{player.breakWinPct}%</dd>
+          <dd className="font-semibold text-card-foreground">{breakPlayed > 0 ? `${player.breakWinPct}%` : '–'}</dd>
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Non-Break Win %</dt>
-          <dd className="font-semibold text-card-foreground">{player.nonBreakWinPct}%</dd>
+          <dd className="font-semibold text-card-foreground">{nonBreakPlayed > 0 ? `${player.nonBreakWinPct}%` : '–'}</dd>
         </div>
         <div className="flex items-baseline justify-between border-t border-dashed border-border pt-1.5">
           <dt className="text-muted-foreground">Break Advantage</dt>
           <dd className={`font-semibold ${advantageColor}`}>
-            {player.breakAdvantage > 0 ? '+' : ''}
-            {player.breakAdvantage}%
+            {hasBreakAdvantageData ? `${player.breakAdvantage > 0 ? '+' : ''}${player.breakAdvantage}%` : '–'}
           </dd>
         </div>
       </dl>
