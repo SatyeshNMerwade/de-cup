@@ -177,7 +177,10 @@ export async function getStatsPageData(): Promise<StatsPageData | null> {
       value: joinNames(dominantWinners.map((p) => p.displayName)),
       detail: dominantWinners.length
         ? dominantWinners
-            .map((p) => `${p.biggestWin?.margin} ball(s) left vs ${p.biggestWinOpponentName} (${p.biggestWin?.stage})`)
+            .map(
+              (p) =>
+                `${p.displayName}: ${p.biggestWin?.margin} ball(s) left vs ${p.biggestWinOpponentName} (${p.biggestWin?.stage})`,
+            )
             .join('; ')
         : 'No data yet',
     },
